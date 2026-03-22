@@ -122,12 +122,22 @@ export default {
           message: this.$t('tagExisted'),
           icon: 'error'
         })
+        done()
         return
       }
       if (val.length > 0) {
-        const createResult = await this.createTag({ name: val })
-        await this.attachTag(createResult)
-        done(val, 'toggle')
+        try {
+          const createResult = await this.createTag({ name: val })
+          done(val, 'add-unique')
+          await this.attachTag(createResult)
+        } catch (e) {
+          console.error('Create tag failed:', e)
+          this.$q.notify({
+            color: 'red-10',
+            message: this.$t('createTagFailed') || 'Failed to create tag',
+            icon: 'error'
+          })
+        }
       }
     },
     /**

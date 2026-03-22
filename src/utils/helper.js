@@ -248,7 +248,7 @@ function generateCategoryNodeTree (categories, categoriesPos) {
  * @param {{}[]} tags
  */
 function generateTagNodeTree (tags = []) {
-  if (!tags.length) return
+  if (!tags || !tags.length) return []
 
   let result = []
   const rootTags = tags
