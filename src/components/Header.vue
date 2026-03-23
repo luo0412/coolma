@@ -5,10 +5,10 @@
   >
     <!-- Mac: 左侧标题 -->
     <div
-      v-if="$q.platform.is.mac && dataLoaded"
+      v-if="$q.platform.is.mac"
       class="header-note-title animated fadeIn q-electron-drag--exception"
       style="cursor: pointer"
-      @click="$refs.tagDialog.toggle"
+      @click="toggleTagDialog"
     >
       <span class='save-dot' :class="{ 'show': this.noteState !== 'default' }"></span>
       <q-tooltip
@@ -60,11 +60,11 @@
 
     <!-- Windows: 标题（可拖拽） -->
     <div
-      v-if="!$q.platform.is.mac && dataLoaded"
-      class="header-note-title animated fadeIn q-electron-drag"
+      v-if="!$q.platform.is.mac"
+      class="header-note-title animated fadeIn q-electron-drag--exception"
       :class="{ 'mac': $q.platform.is.mac }"
       style="cursor: pointer;"
-      @click="$refs.tagDialog.toggle"
+      @click="toggleTagDialog"
     >
       <span class="save-dot" :class="{'show': noteState !== 'default'}"></span>
       <q-tooltip
@@ -267,6 +267,10 @@ export default {
       if (this.$q.platform.is.mac) {
         this.maximize()
       }
+    },
+
+    toggleTagDialog: function () {
+      this.$refs.tagDialog.toggle()
     },
 
     ...mapServerActions(['logout', 'getCategoryNotes']),
