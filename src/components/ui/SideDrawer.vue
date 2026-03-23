@@ -12,29 +12,25 @@
       :class="`exclude-header note-list${$q.dark.isActive ? '-dark' : ''}`"
       @contextmenu='drawerContextMenuHandler'
     >
-      <q-tree
-        :nodes="items"
+      <el-tree
         ref="tree"
+        :data="items"
+        :props="treeProps"
         node-key="key"
-        :selected="currentCategory"
-        @update:selected="
-          v => {
-            updateCurrentCategory({ data: v, type: type })
-            toggleChanged({
-              key: 'noteListVisible',
-              value: true
-            })
-          }
-        "
-        :duration='150'
+        :current-node-key="currentCategory"
+        :default-expand-all="true"
+        :expand-on-click-node="false"
+        :highlight-current="true"
+        :indent="20"
+        class="memocast-el-tree"
+        @node-click="handleNodeClick"
+        @node-contextmenu="contextMenuHandler"
       >
-        <template v-slot:default-header="prop">
-          <div :style="isNodeSelected(prop.node) ? 'color:var(--themeColor)' : ''" class="row items-center full-width memocast-tree-node" @contextmenu="(e) => contextMenuHandler(e, prop.node)">
-            <q-icon :name="nodeIconName(prop.node)" class="q-mr-sm" />
-            <div>{{ prop.node.label }}</div>
-          </div>
-        </template>
-      </q-tree>
+        <span class="memocast-tree-node" slot-scope="{ node }">
+          <i :class="nodeIconName(node)" class="node-icon"></i>
+          <span class="node-label" :style="isNodeSelected(node) ? 'color: var(--themeColor)' : ''">{{ node.label }}</span>
+        </span>
+      </el-tree>
     </q-scroll-area>
   </q-drawer>
 </template>
@@ -44,6 +40,7 @@ import { createNamespacedHelpers } from 'vuex'
 import { showContextMenu as showSideDrawerContextMenu } from 'src/contextMenu/sideDrawer'
 import bus from '../bus'
 import events from 'src/constants/events'
+
 const {
   mapGetters: mapServerGetters,
   mapActions: mapServerActions,
@@ -77,6 +74,26 @@ export default {
       }
       return []
     },
+    treeProps () {
+      return {
+        children: 'children',
+        label: 'label'
+      }
+    },
+    expandedKeys () {
+      const keys = []
+      const collectKeys = (nodes) => {
+        if (!nodes) return
+        for (const node of nodes) {
+          if (node.children && node.children.length > 0) {
+            keys.push(node.key)
+            collectKeys(node.children)
+          }
+        }
+      }
+      collectKeys(this.items)
+      return keys
+    },
     ...mapServerGetters(['categories', 'tags']),
     ...mapServerState(['currentCategory']),
     ...mapClientState(['rightClickCategoryItem'])
@@ -96,20 +113,31 @@ export default {
       }
     },
     nodeIconName: function (node) {
-      if (this.type !== 'category') return 'local_offer'
-      if (this.currentCategory === node.key || (this.$refs.tree && this.$refs.tree.isExpanded(node.key))) {
-        return 'folder_open'
+      if (this.type !== 'category') return 'el-icon-price-tag'
+
+      const isExpanded = node.expanded
+      const isSelected = this.currentCategory === node.key
+
+      if (isSelected || isExpanded) {
+        return 'el-icon-folder-opened'
       }
-      return 'folder'
+      return 'el-icon-folder'
     },
     isNodeSelected: function (node) {
       return this.currentCategory === node.key
     },
-    contextMenuHandler: function (e, node) {
+    handleNodeClick: function (data, node) {
+      this.updateCurrentCategory({ data: data.key, type: this.type })
+      this.toggleChanged({
+        key: 'noteListVisible',
+        value: true
+      })
+    },
+    contextMenuHandler: function (e, data, node) {
       if (this.type !== 'category') return
-      this.setRightClickCategoryItem(node.key)
+      this.setRightClickCategoryItem(data.key)
       e.stopPropagation()
-      showSideDrawerContextMenu(e, this.currentCategory === node.key, node.key)
+      showSideDrawerContextMenu(e, this.currentCategory === data.key, data.key)
     },
     drawerContextMenuHandler: function (e) {
       if (this.type !== 'category') return
@@ -124,13 +152,126 @@ export default {
         value: true
       })
     },
+    expandAllNodes () {
+      if (this.$refs.tree && this.items) {
+        const collectKeys = (nodes) => {
+          const keys = []
+          for (const node of nodes) {
+            keys.push(node.key)
+            if (node.children && node.children.length) {
+              keys.push(...collectKeys(node.children))
+            }
+          }
+          return keys
+        }
+        const allKeys = collectKeys(this.items)
+        for (const key of allKeys) {
+          const treeNode = this.$refs.tree.getNode(key)
+          if (treeNode) {
+            this.$refs.tree.expandNode(treeNode, true, false, false)
+          }
+        }
+      }
+    },
     ...mapServerActions(['updateCurrentCategory']),
     ...mapClientActions(['toggleChanged', 'setRightClickCategoryItem'])
   },
   mounted () {
     bus.$on(events.SIDE_DRAWER_CONTEXT_MENU.openCategory, this.openCategoryHandler)
+    this.$nextTick(() => {
+      this.expandAllNodes()
+    })
+  },
+  updated () {
+    if (this.$refs.tree && this.items && this.items.length > 0) {
+      this.expandAllNodes()
+    }
+  },
+  watch: {
+    currentCategory: {
+      immediate: true,
+      handler (val) {
+        if (this.$refs.tree) {
+          this.$refs.tree.setCurrentKey(val)
+        }
+      }
+    },
+    items: {
+      immediate: true,
+      handler () {
+        this.$nextTick(() => {
+          this.expandAllNodes()
+        })
+      }
+    }
   }
 }
 </script>
 
-<style scoped></style>
+<style lang="scss">
+.memocast-el-tree {
+  background: transparent;
+  padding: 8px 0;
+
+  .el-tree-node {
+    padding-left: 0;
+  }
+
+  .el-tree-node__content {
+    height: 32px;
+    line-height: 32px;
+    padding-left: 0;
+  }
+
+  .el-tree__indent {
+    display: inline-block;
+  }
+
+  .el-tree-node__expand-icon {
+    font-size: 14px;
+    color: var(--iconColor);
+    padding: 4px;
+  }
+
+  .el-tree-node__expand-icon.is-leaf {
+    color: transparent;
+  }
+
+  .el-tree-node.is-current > .el-tree-node__content {
+    background-color: var(--themeColor10);
+  }
+
+  .el-tree-node__content:hover {
+    background-color: var(--floatHoverColor);
+  }
+
+  .el-tree-node:focus > .el-tree-node__content {
+    background-color: var(--themeColor10);
+  }
+
+  .memocast-tree-node {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    padding-right: 8px;
+
+    .node-icon {
+      margin-right: 8px;
+      font-size: 16px;
+      color: var(--iconColor);
+    }
+
+    .node-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: inherit;
+    }
+  }
+}
+
+.q-drawer--left {
+  background: transparent !important;
+}
+</style>
