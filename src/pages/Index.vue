@@ -5,7 +5,7 @@
       :limits='splitterLimits'
       class='full-width'
       unit='%'
-      separator-class='bg-transparent'
+      separator-class='custom-splitter'
       before-class='overflow-hidden'
       after-class='hide-scrollbar'
     >
@@ -296,10 +296,34 @@ export default {
   }
 }
 </script>
-<style>
+<style lang="scss">
 .editor-component {
   height: 100%;
   overflow: auto;
   box-sizing: border-box;
+}
+
+/* QSplitter：separatorClass 加在 .q-splitter__separator 自身，勿写子选择器 */
+.q-splitter.q-splitter--vertical > .q-splitter__separator.custom-splitter {
+  background-color: #dfe3ea !important;
+  transition: background-color 0.15s ease, width 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.q-splitter.q-splitter--vertical > .q-splitter__separator.custom-splitter:hover,
+.q-splitter.q-splitter--vertical.q-splitter--active > .q-splitter__separator.custom-splitter {
+  background-color: var(--themeColor) !important;
+  width: 3px !important;
+  box-shadow: 0 0 0 1px var(--themeColor30, rgba(33, 181, 111, 0.35));
+}
+
+.q-splitter.q-splitter--dark.q-splitter--vertical > .q-splitter__separator.custom-splitter {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.q-splitter.q-splitter--dark.q-splitter--vertical > .q-splitter__separator.custom-splitter:hover,
+.q-splitter.q-splitter--dark.q-splitter--vertical.q-splitter--active > .q-splitter__separator.custom-splitter {
+  background-color: var(--themeColor) !important;
 }
 </style>

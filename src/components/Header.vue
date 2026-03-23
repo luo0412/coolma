@@ -105,8 +105,9 @@
       <!-- 头像下拉菜单 (ElementUI) -->
       <div class="header-avatar-wrapper q-electron-drag--exception">
         <el-dropdown trigger="click" @command="handleAvatarCommand">
-          <div class="header-avatar">
-            <img :src="avatarUrl ? avatarUrl : defaultAvatar" alt="avatar" />
+          <div class="header-avatar" :class="{ 'has-photo': !!avatarUrl }">
+            <img v-if="avatarUrl" :src="avatarUrl" alt="avatar" />
+            <i v-else class="el-icon-user header-avatar-placeholder" />
           </div>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item command="login" v-if="!isLogin">
@@ -143,7 +144,6 @@ import SettingsDialog from './ui/dialog/SettingsDialog'
 import SideDrawer from './ui/SideDrawer'
 import { createNamespacedHelpers } from 'vuex'
 import helper from 'src/utils/helper'
-import defaultAvatarBase64 from 'src/assets/default-avatar'
 import TagDialog from 'components/ui/dialog/TagDialog'
 import bus from 'components/bus'
 import events from 'src/constants/events'
@@ -174,9 +174,6 @@ export default {
     ]),
     darkMode: function () {
       return this.$q.dark.isActive
-    },
-    defaultAvatar: function () {
-      return defaultAvatarBase64
     },
     title: function () {
       if (this.currentNote.info) {
@@ -378,27 +375,36 @@ export default {
 }
 
 .header-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 2px solid transparent;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(145deg, var(--themeColor30, rgba(33, 181, 111, 0.35)), var(--themeColor, #21b56f));
+  box-sizing: border-box;
+}
+
+.header-avatar.has-photo {
+  background: var(--editorBgColor, #fff);
 }
 
 .header-avatar:hover {
-  background-color: var(--floatHoverColor);
+  box-shadow: 0 0 0 1px var(--themeColor40, rgba(33, 181, 111, 0.4));
+}
+
+.header-avatar-placeholder {
+  font-size: 14px;
+  color: #fff;
 }
 
 .header-avatar img {
-  width: 28px;
-  height: 28px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 50%;
 }
 
 .header-window-controls {
