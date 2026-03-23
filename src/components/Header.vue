@@ -3,12 +3,11 @@
     class="q-electron-drag header text-grey"
     @dblclick="macDoubleClickHandler"
   >
-    <q-space v-if="$q.platform.is.mac" />
+    <!-- Mac: 左侧标题 -->
     <div
       v-if="$q.platform.is.mac && dataLoaded"
-      class="header-note-title animated fadeIn"
+      class="header-note-title animated fadeIn q-electron-drag--exception"
       style="cursor: pointer"
-      :class="{ 'mac': $q.platform.is.mac }"
       @click="$refs.tagDialog.toggle"
     >
       <span class='save-dot' :class="{ 'show': this.noteState !== 'default' }"></span>
@@ -23,72 +22,51 @@
       </q-tooltip>
       <span key="title" slot="reference">{{ title }}</span>
     </div>
-    <q-space v-if="$q.platform.is.mac" />
-    <q-avatar
-      size="36px"
-      class="cursor-pointer q-electron-drag--exception"
-      :title="$t('noteCategory')"
-      v-ripple
-      @click.stop="
-        () => {
-          if (isLogin) {
-            if (drawerType !== 'category') {
-              drawerType = 'category'
-              $refs.sideDrawer.show()
-            } else $refs.sideDrawer.toggle()
-          }
-        }
-      "
-    >
-      <q-icon name="account_tree" color="#16A2B8" />
-    </q-avatar>
-    <q-avatar
-      size="36px"
-      class="cursor-pointer q-electron-drag--exception "
-      v-ripple
-      :title="$t('tag')"
-      @click.stop="
-        () => {
-          if (isLogin) {
-            if (drawerType !== 'tag') {
-              drawerType = 'tag'
-              $refs.sideDrawer.show()
-            } else $refs.sideDrawer.toggle()
-          }
-        }
-      "
-    >
-      <q-icon name="local_offer" color="#16A2B8" />
-    </q-avatar>
-    <q-avatar
-      size="26px"
-      class="cursor-pointer q-electron-drag--exception"
-      :title="isLogin ? $t('logout') : $t('login')"
-      @click="loginHandler"
-      v-ripple
-    >
-      <img :src="avatarUrl ? avatarUrl : defaultAvatar" />
-    </q-avatar>
 
-    <q-avatar
-      size="36px"
-      class="cursor-pointer q-electron-drag--exception"
-      :title="$t('search')"
-      v-ripple
-      @click="() => $refs.searchDialog.toggle()"
-    >
-      <q-icon style="font-size: 1.1em;" name="pageview" />
-    </q-avatar>
-    <q-space v-if="!$q.platform.is.mac" />
+    <!-- 左侧图标 -->
+    <div class="header-left-icons">
+      <!-- 文件夹图标 -->
+      <div
+        class="header-icon-btn q-electron-drag--exception"
+        :class="{ 'is-active': drawerType === 'category' }"
+        :title="$t('noteCategory')"
+        @click="toggleCategoryDrawer"
+      >
+        <i class="el-icon-folder icon-custom"></i>
+      </div>
+
+      <!-- 标签图标 -->
+      <div
+        class="header-icon-btn q-electron-drag--exception"
+        :class="{ 'is-active': drawerType === 'tag' }"
+        :title="$t('tag')"
+        @click="toggleTagDrawer"
+      >
+        <i class="el-icon-price-tag icon-custom"></i>
+      </div>
+
+      <!-- 搜索图标 -->
+      <div
+        class="header-icon-btn q-electron-drag--exception"
+        :title="$t('search')"
+        @click="() => $refs.searchDialog.toggle()"
+      >
+        <i class="el-icon-search icon-custom"></i>
+      </div>
+    </div>
+
+    <!-- 右侧区域 -->
+    <q-space />
+
+    <!-- Windows: 标题（可拖拽） -->
     <div
       v-if="!$q.platform.is.mac && dataLoaded"
-      class="header-note-title animated fadeIn q-electron-drag--exception"
+      class="header-note-title animated fadeIn q-electron-drag"
       :class="{ 'mac': $q.platform.is.mac }"
       style="cursor: pointer;"
       @click="$refs.tagDialog.toggle"
     >
       <span class="save-dot" :class="{'show': noteState !== 'default'}"></span>
-      <!-- <q-icon v-show="noteState !== 'default'" class="note-state-icon" key="icon" name="fiber_manual_record" size="16px" /> -->
       <q-tooltip
         v-if="tags.length > 0"
         :offset="[20, 10]"
@@ -100,30 +78,57 @@
       </q-tooltip>
       <span key="title">{{ title }}</span>
     </div>
-    <q-space v-if="!$q.platform.is.mac" />
-    <q-avatar
-      size="36px"
-      class="cursor-pointer q-electron-drag--exception"
-      :title="$t('switchView')"
-      v-ripple
-      @click="switchViewHandler"
-    >
-      <q-icon name="table_chart" />
-    </q-avatar>
-    <q-avatar
-      size="36px"
-      class="cursor-pointer q-electron-drag--exception"
-      :title="$t('settings')"
-      v-ripple
-      @click="$refs.settingsDialog.toggle()"
-    >
-      <q-icon name="settings" />
-    </q-avatar>
-    <div v-if="!$q.platform.is.mac">
-      <q-btn dense flat icon="minimize" @click="minimize" />
-      <q-btn dense flat :icon="isMaximized ? 'open_in_full' : 'crop_square'" @click="maximize" />
-      <q-btn dense flat icon="close" class="close-button" @click="closeApp" />
+
+    <q-space />
+
+    <!-- 右侧图标组 -->
+    <div class="header-right-icons">
+      <!-- 视图切换按钮 -->
+      <div
+        class="header-icon-btn q-electron-drag--exception"
+        :class="{ 'is-active': noteListVisible }"
+        :title="$t('switchView')"
+        @click="switchViewHandler"
+      >
+        <i class="el-icon-s-grid icon-custom"></i>
+      </div>
+
+      <!-- 设置按钮 -->
+      <div
+        class="header-icon-btn q-electron-drag--exception"
+        :title="$t('settings')"
+        @click="$refs.settingsDialog.toggle()"
+      >
+        <i class="el-icon-setting icon-custom"></i>
+      </div>
+
+      <!-- 头像下拉菜单 (ElementUI) -->
+      <div class="header-avatar-wrapper q-electron-drag--exception">
+        <el-dropdown trigger="click" @command="handleAvatarCommand">
+          <div class="header-avatar">
+            <img :src="avatarUrl ? avatarUrl : defaultAvatar" alt="avatar" />
+          </div>
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item command="login" v-if="!isLogin">
+              <i class="el-icon-user"></i>
+              {{ $t('login') }}
+            </el-dropdown-item>
+            <el-dropdown-item command="logout" v-else>
+              <i class="el-icon-switch-button"></i>
+              {{ $t('logout') }}
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
+      </div>
+
+      <!-- 窗口控制按钮 (Windows) -->
+      <div v-if="!$q.platform.is.mac" class="header-window-controls">
+        <q-btn dense flat icon="minimize" @click="minimize" />
+        <q-btn dense flat :icon="isMaximized ? 'open_in_full' : 'crop_square'" @click="maximize" />
+        <q-btn dense flat icon="close" class="close-button" @click="closeApp" />
+      </div>
     </div>
+
     <LoginDialog ref="loginDialog" />
     <SettingsDialog ref="settingsDialog" />
     <SearchDialog ref='searchDialog' />
@@ -144,15 +149,18 @@ import bus from 'components/bus'
 import events from 'src/constants/events'
 import SearchDialog from 'components/ui/dialog/SearchDialog'
 import { ipcRenderer } from 'electron'
+
 const {
   mapState: mapServerState,
   mapGetters: mapServerGetters,
   mapActions: mapServerActions
 } = createNamespacedHelpers('server')
+
 const {
   mapState: mapClientState,
   mapActions: mapClientActions
 } = createNamespacedHelpers('client')
+
 export default {
   name: 'Header',
   computed: {
@@ -170,7 +178,6 @@ export default {
     defaultAvatar: function () {
       return defaultAvatarBase64
     },
-
     title: function () {
       if (this.currentNote.info) {
         let { title } = this.currentNote.info
@@ -179,22 +186,12 @@ export default {
             title.length - 12
           )}`
         }
-        // if (this.noteState !== 'default') {
-        //   return `${title} —— ${this.$t(this.noteState)}`
-        // }
         return title
       }
       return ''
     },
     dataLoaded: function () {
       return this.currentNote && !helper.isNullOrEmpty(this.currentNote.html)
-    },
-    popperOptions: function () {
-      return {
-        placement: 'bottom',
-        modifiers: { offset: { offset: '0,10px' } },
-        gpuAcceleration: true
-      }
     },
     tags: function () {
       return this.tagsOfCurrentNote.map(t => t.name)
@@ -221,29 +218,46 @@ export default {
     },
 
     closeApp () {
-      // this.$q.electron.remote.BrowserWindow.getFocusedWindow().close()
       ipcRenderer.send('window-close')
     },
-    loginHandler: function () {
-      if (!this.isLogin) {
-        this.$refs.loginDialog.toggle()
-      } else {
-        this.$q
-          .dialog({
-            title: this.$t('logout'),
-            message: this.$t('logoutHint'),
-            cancel: {
-              label: this.$t('cancel')
-            },
-            ok: {
-              label: this.$t('logout')
-            }
-          })
-          .onOk(() => {
-            this.logout()
-          })
+
+    toggleCategoryDrawer () {
+      if (this.isLogin) {
+        if (this.drawerType !== 'category') {
+          this.drawerType = 'category'
+          this.$refs.sideDrawer.show()
+        } else {
+          this.$refs.sideDrawer.toggle()
+        }
       }
     },
+
+    toggleTagDrawer () {
+      if (this.isLogin) {
+        if (this.drawerType !== 'tag') {
+          this.drawerType = 'tag'
+          this.$refs.sideDrawer.show()
+        } else {
+          this.$refs.sideDrawer.toggle()
+        }
+      }
+    },
+
+    handleAvatarCommand (command) {
+      if (command === 'login') {
+        this.$refs.loginDialog.toggle()
+      } else if (command === 'logout') {
+        this.$q.dialog({
+          title: this.$t('logout'),
+          message: this.$t('logoutHint'),
+          cancel: { label: this.$t('cancel') },
+          ok: { label: this.$t('logout') }
+        }).onOk(() => {
+          this.logout()
+        })
+      }
+    },
+
     switchViewHandler: function () {
       this.toggleChanged({
         key: 'noteListVisible',
@@ -251,11 +265,13 @@ export default {
       })
       this.$refs.sideDrawer.hide()
     },
+
     macDoubleClickHandler: function () {
       if (this.$q.platform.is.mac) {
         this.maximize()
       }
     },
+
     ...mapServerActions(['logout', 'getCategoryNotes']),
     ...mapClientActions(['toggleChanged'])
   },
@@ -297,4 +313,115 @@ export default {
   background-color: rgba(255, 0, 0, .6);
 }
 
+.header-left-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-right-icons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-icon-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.header-icon-btn:hover {
+  background-color: var(--floatHoverColor);
+}
+
+.header-icon-btn.is-active {
+  background-color: var(--themeColor10);
+}
+
+.header-icon-btn.is-active::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 2px;
+  background-color: var(--themeColor);
+  border-radius: 1px;
+}
+
+.header-icon-btn .icon-custom {
+  font-size: 18px;
+  color: var(--iconColor);
+  transition: color 0.2s ease;
+}
+
+.header-icon-btn:hover .icon-custom {
+  color: var(--themeColor);
+}
+
+.header-icon-btn.is-active .icon-custom {
+  color: var(--themeColor);
+}
+
+.header-avatar-wrapper {
+  margin-left: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.header-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-avatar:hover {
+  background-color: var(--floatHoverColor);
+}
+
+.header-avatar img {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.header-window-controls {
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.el-dropdown-menu {
+  background-color: var(--editorBgColor);
+  border: 1px solid var(--floatBorderColor);
+}
+
+.el-dropdown-menu__item {
+  color: var(--editorColor);
+}
+
+.el-dropdown-menu__item:hover {
+  background-color: var(--themeColor10);
+  color: var(--themeColor);
+}
+
+.el-dropdown-menu__item i {
+  margin-right: 8px;
+}
 </style>

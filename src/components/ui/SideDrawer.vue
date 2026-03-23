@@ -80,20 +80,6 @@ export default {
         label: 'label'
       }
     },
-    expandedKeys () {
-      const keys = []
-      const collectKeys = (nodes) => {
-        if (!nodes) return
-        for (const node of nodes) {
-          if (node.children && node.children.length > 0) {
-            keys.push(node.key)
-            collectKeys(node.children)
-          }
-        }
-      }
-      collectKeys(this.items)
-      return keys
-    },
     ...mapServerGetters(['categories', 'tags']),
     ...mapServerState(['currentCategory']),
     ...mapClientState(['rightClickCategoryItem'])
@@ -152,40 +138,11 @@ export default {
         value: true
       })
     },
-    expandAllNodes () {
-      if (this.$refs.tree && this.items) {
-        const collectKeys = (nodes) => {
-          const keys = []
-          for (const node of nodes) {
-            keys.push(node.key)
-            if (node.children && node.children.length) {
-              keys.push(...collectKeys(node.children))
-            }
-          }
-          return keys
-        }
-        const allKeys = collectKeys(this.items)
-        for (const key of allKeys) {
-          const treeNode = this.$refs.tree.getNode(key)
-          if (treeNode) {
-            this.$refs.tree.expandNode(treeNode, true, false, false)
-          }
-        }
-      }
-    },
     ...mapServerActions(['updateCurrentCategory']),
     ...mapClientActions(['toggleChanged', 'setRightClickCategoryItem'])
   },
   mounted () {
     bus.$on(events.SIDE_DRAWER_CONTEXT_MENU.openCategory, this.openCategoryHandler)
-    this.$nextTick(() => {
-      this.expandAllNodes()
-    })
-  },
-  updated () {
-    if (this.$refs.tree && this.items && this.items.length > 0) {
-      this.expandAllNodes()
-    }
   },
   watch: {
     currentCategory: {
@@ -194,14 +151,6 @@ export default {
         if (this.$refs.tree) {
           this.$refs.tree.setCurrentKey(val)
         }
-      }
-    },
-    items: {
-      immediate: true,
-      handler () {
-        this.$nextTick(() => {
-          this.expandAllNodes()
-        })
       }
     }
   }
