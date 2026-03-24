@@ -7,7 +7,7 @@
         :bar-style="barStyle"
         :class="`exclude-header note-list${$q.dark.isActive ? '-dark' : ''}`"
       >
-        <q-list>
+        <q-list v-if="currentNotes.length > 0">
           <q-item
             clickable
             v-ripple="{ color: '#212121' }"
@@ -24,6 +24,9 @@
             </q-item-section>
           </q-item>
         </q-list>
+        <div v-else class="note-list-empty">
+          <a-empty :description="$t('noNotes')" />
+        </div>
       </q-scroll-area>
       <q-card
         class="absolute-bottom bg-transparent full-width no-shadow no-padding no-border-radius note-list-bottom text-center"
@@ -34,7 +37,7 @@
       </q-card>
       <q-fab
         :color="color"
-        icon="build"
+        icon="post_add"
         direction="up"
         padding="11px"
         class="absolute-bottom-right fab-btn"
@@ -317,6 +320,14 @@ export default {
 .note-list-root {
   min-height: 0;
   position: relative;
+}
+
+.note-list-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
 }
 
 .note-list-bottom {

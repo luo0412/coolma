@@ -102,12 +102,14 @@
         <i class="el-icon-setting icon-custom"></i>
       </div>
 
-      <!-- 头像下拉菜单 (ElementUI) -->
+      <!-- 头像下拉菜单 (Ant Design Vue) -->
       <div class="header-avatar-wrapper q-electron-drag--exception">
         <el-dropdown trigger="click" @command="handleAvatarCommand">
           <div class="header-avatar" :class="{ 'has-photo': !!avatarUrl }">
             <img v-if="avatarUrl" :src="avatarUrl" alt="avatar" />
-            <i v-else class="el-icon-user header-avatar-placeholder" />
+            <a-avatar v-else :size="26" :style="{ backgroundColor: 'transparent' }">
+              <i class="el-icon-user header-avatar-placeholder" style="font-size: 14px; color: #fff;" />
+            </a-avatar>
           </div>
           <el-dropdown-menu slot="dropdown">
             <el-dropdown-item command="login" v-if="!isLogin">
