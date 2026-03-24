@@ -1,5 +1,6 @@
 
 module.exports = {
+  // transpileDependencies: [/vega.*/, /@quasar.*/, 'htmlparser2', 'parse5', 'cheerio', /electron.*/],
   presets: [
     '@quasar/babel-preset-app'
   ],

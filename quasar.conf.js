@@ -69,7 +69,7 @@ module.exports = function (/* ctx */) {
         // ESLint is run separately via `npm run lint`.
         // eslint-loader v4 is incompatible with eslint v8 (removed getFormatter API),
         // so it has been removed from the webpack build pipeline.
-      
+
         // Add babel loader for vega modules
         // cfg.module.rules.push({
         //   test: /\.js$/,
@@ -264,7 +264,15 @@ module.exports = function (/* ctx */) {
         // do something with Electron main process Webpack cfg
         // chainWebpack also available besides this extendWebpack
         cfg.externals = {
-          mime: 'commonjs mime'
+          mime: 'commonjs mime',
+          electron: 'commonjs electron',
+          'electron-util': 'commonjs electron-util',
+          'electron-log': 'commonjs electron-log',
+          'electron-unhandled': 'commonjs electron-unhandled',
+          'electron-debug': 'commonjs electron-debug',
+          'electron-updater': 'commonjs electron-updater',
+          'electron-serve': 'commonjs electron-serve',
+          'electron-window-state': 'commonjs electron-window-state'
         }
       }
     }

@@ -1,20 +1,20 @@
 import { webContents, BrowserWindow } from 'electron'
 
-let wcs = webContents.getFocusedWebContents()
-
 async function sendNotification (notificationPayload, event) {
+  let wcs = BrowserWindow.fromWebContents(event.sender)?.webContents
   if (!wcs) {
-    wcs = BrowserWindow.fromWebContents(event.sender).webContents
+    wcs = webContents.getFocusedWebContents()
   }
-  return wcs.send('show-notification', notificationPayload)
+  return wcs?.send('show-notification', notificationPayload)
 }
 
 async function triggerRendererContextMenu (eventName, eventData, event) {
+  let wcs = BrowserWindow.fromWebContents(event.sender)?.webContents
   if (!wcs) {
-    wcs = BrowserWindow.fromWebContents(event.sender).webContents
+    wcs = webContents.getFocusedWebContents()
   }
   console.log('triggerRendererContextMenu', eventName, eventData)
-  return wcs.send('pop-context-menu-event', {
+  return wcs?.send('pop-context-menu-event', {
     eventName,
     eventData
   })
