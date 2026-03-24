@@ -212,7 +212,7 @@ module.exports = function (/* ctx */) {
       builder: {
         appId: 'cn.memocast.app',
         electronDownload: {
-          mirror: 'https://npm.taobao.org/mirrors/electron/'
+          mirror: 'https://npmmirror.com/mirrors/electron/'
         },
         publish: {
           provider: 'github',
