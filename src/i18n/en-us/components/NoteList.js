@@ -6,5 +6,6 @@ export default {
   deleteCategory: 'Delete This Category',
   import: 'Import',
   restrictedToMarkdown: 'Restricted to Markdown',
-  upload: 'Upload'
+  upload: 'Upload',
+  noNotes: 'No notes yet'
 }

@@ -6,5 +6,6 @@ export default {
   deleteCategory: '删除此文件夹',
   import: '导入',
   restrictedToMarkdown: '仅限于Markdown',
-  upload: '上传'
+  upload: '上传',
+  noNotes: '暂无笔记'
 }
