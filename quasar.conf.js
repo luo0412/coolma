@@ -22,7 +22,8 @@ module.exports = function (/* ctx */) {
 
       'i18n',
       'request',
-      'element-ui'
+      'element-ui',
+      'tiny-vue'
     ],
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
@@ -53,7 +54,7 @@ module.exports = function (/* ctx */) {
       // Add dependencies for transpiling with Babel (Array of string/regex)
       // (from node_modules, which are by default not transpiled).
       // Applies only if "transpile" is set to true.
-      transpileDependencies: [/vega.*/, /@quasar.*/, 'htmlparser2', 'parse5', 'cheerio'],
+      transpileDependencies: [/vega.*/, /@quasar.*/, /@opentiny.*/, /quill/, 'htmlparser2', 'parse5', 'cheerio'],
 
       // rtl: false, // https://quasar.dev/options/rtl-support
       // preloadChunks: true,
