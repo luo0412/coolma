@@ -90,7 +90,7 @@
         :title="$t('switchView')"
         @click="switchViewHandler"
       >
-        <i class="el-icon-s-grid icon-custom"></i>
+        <q-icon name="table_chart" class="icon-custom" />
       </div>
 
       <!-- 设置按钮 -->
@@ -107,8 +107,8 @@
         <el-dropdown trigger="click" @command="handleAvatarCommand">
           <div class="header-avatar" :class="{ 'has-photo': !!avatarUrl }">
             <img v-if="avatarUrl" :src="avatarUrl" alt="avatar" />
-            <a-avatar v-else :size="26" :style="{ backgroundColor: 'transparent' }">
-              <i class="el-icon-user header-avatar-placeholder" style="font-size: 14px; color: #fff;" />
+            <a-avatar v-else :size="20" :style="{ backgroundColor: 'transparent' }">
+              <i class="el-icon-user header-avatar-placeholder" style="font-size: 11px; color: #fff;" />
             </a-avatar>
           </div>
           <el-dropdown-menu slot="dropdown">
@@ -372,8 +372,8 @@ export default {
 }
 
 .header-avatar {
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
@@ -394,7 +394,7 @@ export default {
 }
 
 .header-avatar-placeholder {
-  font-size: 14px;
+  font-size: 11px;
   color: #fff;
 }
 

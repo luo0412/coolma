@@ -1,9 +1,29 @@
-import { filter } from 'fuzzaldrin'
+/**
+ * [Fuzzaldrin was used here for fuzzy search, replaced with native includes-based filter]
+ * Original fuzzaldrin usages:
+ *   import { filter } from 'fuzzaldrin'
+ *   filter(arr, text, { key: 'label' }) → customFilterByKey(arr, text, 'label')
+ * Dependencies removed: fuzzaldrin
+ */
 import { patch, h } from '../../parser/render/snabbdom'
 import { deepCopy } from '../../utils'
 import BaseScrollFloat from '../baseScrollFloat'
 import { quickInsertObj } from './config'
 import './index.css'
+
+/**
+ * Simple substring-includes filter, replacing fuzzaldrin's fuzzy match for label search.
+ * @param {Array} candidates - Array of objects to filter
+ * @param {string} text - Search text
+ * @param {string} key - Object key to match against
+ * @returns {Array} Filtered array (sorted by match position)
+ */
+const customFilterByKey = (candidates, text, key) => {
+  const lower = text.toLowerCase()
+  return candidates
+    .filter(c => String(c[key]).toLowerCase().includes(lower))
+    .sort((a, b) => String(a[key]).toLowerCase().indexOf(lower) - String(b[key]).toLowerCase().indexOf(lower))
+}
 
 class QuickInsert extends BaseScrollFloat {
   static pluginName = 'quickInsert'
@@ -127,7 +147,8 @@ class QuickInsert extends BaseScrollFloat {
     if (text !== '') {
       result = {}
       Object.keys(obj).forEach(key => {
-        result[key] = filter(obj[key], text, { key: 'label' })
+        // [Fuzzaldrin] filter(arr, text, { key: 'label' }) → customFilterByKey(arr, text, 'label')
+        result[key] = customFilterByKey(obj[key], text, 'label')
       })
     }
     this.renderObj = result
@@ -180,4 +201,3 @@ class QuickInsert extends BaseScrollFloat {
 }
 
 export default QuickInsert
-

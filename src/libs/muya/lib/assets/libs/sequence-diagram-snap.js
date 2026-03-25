@@ -87,7 +87,8 @@ Diagram.Note = function(actor, placement, message) {
 };
 
 Diagram.Note.prototype.hasManyActors = function() {
-  return _.isArray(this.actor);
+  // [Underscore] _.isArray() → Array.isArray()
+  return Array.isArray(this.actor);
 };
 
 Diagram.unescape = function(s) {
@@ -758,7 +759,8 @@ exports.Parser = parser.Parser, exports.parse = function() {
  * This is brittle as it depends on jison internals
  */
 function ParseError(message, hash) {
-  _.extend(this, hash);
+  // [Underscore] _.extend(this, hash) → Object.assign(this, hash)
+  Object.assign(this, hash);
 
   this.name = 'ParseError';
   this.message = (message || '');
@@ -876,7 +878,8 @@ function clamp(x, min, max) {
 }
 
 function wobble(x1, y1, x2, y2) {
-  assert(_.all([x1,x2,y1,y2], _.isFinite), 'x1,x2,y1,y2 must be numeric');
+  // [Underscore] _.all([...], _.isFinite) → [].every(Number.isFinite)
+  assert([x1, x2, y1, y2].every(n => Number.isFinite(n)), 'x1,x2,y1,y2 must be numeric');
 
   // Wobble no more than 1/25 of the line length
   var factor = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) / 25;
@@ -908,7 +911,8 @@ function wobble(x1, y1, x2, y2) {
  * Draws a wobbly (hand drawn) rect
  */
 function handRect(x, y, w, h) {
-  assert(_.all([x, y, w, h], _.isFinite), 'x, y, w, h must be numeric');
+  // [Underscore] _.all([x, y, w, h], _.isFinite) → [].every(Number.isFinite)
+  assert([x, y, w, h].every(n => Number.isFinite(n)), 'x, y, w, h must be numeric');
   return 'M' + x + ',' + y +
    wobble(x, y, x + w, y) +
    wobble(x + w, y, x + w, y + h) +
@@ -920,7 +924,8 @@ function handRect(x, y, w, h) {
  * Draws a wobbly (hand drawn) line
  */
 function handLine(x1, y1, x2, y2) {
-  assert(_.all([x1,x2,y1,y2], _.isFinite), 'x1,x2,y1,y2 must be numeric');
+  // [Underscore] _.all([...], _.isFinite) → [].every(Number.isFinite)
+  assert([x1, x2, y1, y2].every(n => Number.isFinite(n)), 'x1,x2,y1,y2 must be numeric');
   return 'M' + x1.toFixed(1) + ',' + y1.toFixed(1) + wobble(x1, y1, x2, y2);
 }
 
@@ -932,7 +937,8 @@ var BaseTheme = function(diagram, options) {
   this.init(diagram, options);
 };
 
-_.extend(BaseTheme.prototype, {
+// [Underscore] _.extend(T.prototype, {...}) → Object.assign(T.prototype, {...})
+Object.assign(BaseTheme.prototype, {
 
   // Init called while creating the Theme
   init: function(diagram, options) {
@@ -984,7 +990,8 @@ _.extend(BaseTheme.prototype, {
       diagram.height += title.height;
     }
 
-    _.each(actors, function(a) {
+    // [Underscore] _.each(actors, fn) → actors.forEach(fn)
+    actors.forEach(function(a) {
       var bb = this.textBBox(a.name, font);
       a.textBB = bb;
 
@@ -1014,7 +1021,8 @@ _.extend(BaseTheme.prototype, {
       }
     }
 
-    _.each(signals, function(s) {
+    // [Underscore] _.each(signals, fn) → signals.forEach(fn)
+    signals.forEach(function(s) {
       // Indexes of the left and right actors involved
       var a;
       var b;
@@ -1083,11 +1091,13 @@ _.extend(BaseTheme.prototype, {
 
     // Re-jig the positions
     var actorsX = 0;
-    _.each(actors, function(a) {
+    // [Underscore] _.each(actors, fn) → actors.forEach(fn)
+    actors.forEach(function(a) {
       a.x = Math.max(actorsX, a.x);
 
       // TODO This only works if we loop in sequence, 0, 1, 2, etc
-      _.each(a.distances, function(distance, b) {
+      // [Underscore] _.each(a.distances, fn) → Object.entries(a.distances).forEach(fn)
+      Object.entries(a.distances).forEach(function([b, distance]) {
         // lodash (and possibly others) do not like sparse arrays
         // so sometimes they return undefined
         if (typeof distance == 'undefined') {
@@ -1124,7 +1134,8 @@ _.extend(BaseTheme.prototype, {
 
   drawActors: function(offsetY) {
     var y = offsetY;
-    _.each(this.diagram.actors, function(a) {
+    // [Underscore] _.each(arr, fn) → arr.forEach(fn)
+    this.diagram.actors.forEach(function(a) {
       // Top box
       this.drawActor(a, y, this.actorsHeight_);
 
@@ -1147,7 +1158,8 @@ _.extend(BaseTheme.prototype, {
 
   drawSignals: function(offsetY) {
     var y = offsetY;
-    _.each(this.diagram.signals, function(s) {
+    // [Underscore] _.each(arr, fn) → arr.forEach(fn)
+    this.diagram.signals.forEach(function(s) {
       // TODO Add debug mode, that draws padding/margin box
       if (s.type == 'Signal') {
         if (s.isSelf()) {
@@ -1282,7 +1294,8 @@ if (typeof Snap != 'undefined') {
    ******************/
 
   var SnapTheme = function(diagram, options, resume) {
-        _.defaults(options, {
+        // [Underscore] _.defaults(obj, defaults) → Object.assign(obj, defaults)
+        Object.assign(options, {
             'css-class': 'simple',
             'font-size': 16,
             'font-family': 'Andale Mono, monospace'
@@ -1291,7 +1304,8 @@ if (typeof Snap != 'undefined') {
         this.init(diagram, options, resume);
       };
 
-  _.extend(SnapTheme.prototype, BaseTheme.prototype, {
+  // [Underscore] _.extend(T.prototype, {...}) → Object.assign(T.prototype, {...})
+  Object.assign(SnapTheme.prototype, BaseTheme.prototype, {
 
     init: function(diagram, options, resume) {
             BaseTheme.prototype.init.call(this, diagram);
@@ -1416,7 +1430,8 @@ if (typeof Snap != 'undefined') {
     },
 
     createText: function(text, font) {
-      text = _.invoke(text.split('\n'), 'trim');
+      // [Underscore] _.invoke(arr, 'trim') → arr.map(s => s.trim())
+      text = text.split('\n').map(s => s.trim());
       var t = this.paper_.text(0, 0, text);
       t.attr(font || {});
       if (text.length > 1) {
@@ -1507,7 +1522,8 @@ if (typeof Snap != 'undefined') {
    ******************/
 
   var SnapHandTheme = function(diagram, options, resume) {
-        _.defaults(options, {
+        // [Underscore] _.defaults(obj, defaults) → Object.assign(obj, defaults)
+        Object.assign(options, {
             'css-class': 'hand',
             'font-size': 16,
             'font-family': 'danielbd'
@@ -1517,7 +1533,8 @@ if (typeof Snap != 'undefined') {
       };
 
   // Take the standard SnapTheme and make all the lines wobbly
-  _.extend(SnapHandTheme.prototype, SnapTheme.prototype, {
+  // [Underscore] _.extend(T.prototype, {...}) → Object.assign(T.prototype, {...})
+  Object.assign(SnapHandTheme.prototype, SnapTheme.prototype, {
     drawLine: function(x1, y1, x2, y2, linetype, arrowhead) {
       var line = this.paper_.path(handLine(x1, y1, x2, y2)).attr(LINE);
       if (linetype !== undefined) {
@@ -1551,7 +1568,8 @@ if (typeof Raphael == 'undefined' && typeof Snap == 'undefined') {
   throw new Error('Raphael or Snap.svg is required to be included.');
 }
 
-if (_.isEmpty(Diagram.themes)) {
+// [Underscore] _.isEmpty(obj) → Object.keys(obj).length === 0
+if (Object.keys(Diagram.themes).length === 0) {
   // If you are using stock js-sequence-diagrams you should never see this. This only
   // happens if you have removed the built in themes.
   throw new Error('No themes were registered. Please call registerTheme(...).');
@@ -1570,14 +1588,16 @@ Diagram.prototype.drawSVG = function(container, options) {
     theme: 'hand'
   };
 
-  options = _.defaults(options || {}, defaultOptions);
+  // [Underscore] _.defaults(options || {}, defaultOptions) → Object.assign({}, defaultOptions, options || {})
+  options = Object.assign({}, defaultOptions, options || {});
 
   if (!(options.theme in Diagram.themes)) {
     throw new Error('Unsupported theme: ' + options.theme);
   }
 
   // TODO Write tests for this check
-  var div = _.isString(container) ? document.getElementById(container) : container;
+  // [Underscore] _.isString(x) → typeof x === 'string'
+  var div = typeof container === 'string' ? document.getElementById(container) : container;
   if (div === null || !div.tagName) {
     throw new Error('Invalid container: ' + container);
   }

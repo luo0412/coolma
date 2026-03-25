@@ -29,5 +29,6 @@ export default {
   margin-top: 0 !important;
   margin-bottom: 0 !important;
   background: none !important;
+  border-bottom: 1px solid var(--floatBorderColor);
 }
 </style>

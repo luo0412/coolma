@@ -1,4 +1,10 @@
-import { filter } from 'fuzzaldrin'
+/**
+ * [Fuzzaldrin was used here for fuzzy search, replaced with native includes-based filter]
+ * Original fuzzaldrin usages:
+ *   import { filter } from 'fuzzaldrin'
+ *   filter(arr, text, { key: 'search' }) → customFilterByKey(arr, text, 'search')
+ * Dependencies removed: fuzzaldrin
+ */
 import emojis from './emojisJson'
 import { CLASS_OR_ID } from '../../config'
 
@@ -33,6 +39,20 @@ export const checkEditEmoji = node => {
   return false
 }
 
+/**
+ * Simple substring-includes filter, replacing fuzzaldrin's fuzzy match.
+ * @param {Array} candidates - Array of objects to filter
+ * @param {string} text - Search text
+ * @param {string} key - Object key to match against
+ * @returns {Array} Filtered array (sorted by match position)
+ */
+const customFilterByKey = (candidates, text, key) => {
+  const lower = text.toLowerCase()
+  return candidates
+    .filter(c => String(c[key]).toLowerCase().includes(lower))
+    .sort((a, b) => String(a[key]).toLowerCase().indexOf(lower) - String(b[key]).toLowerCase().indexOf(lower))
+}
+
 class Emoji {
   constructor () {
     this.cache = new Map()
@@ -44,7 +64,8 @@ class Emoji {
     const result = {}
 
     Object.keys(emojisForSearch).forEach(category => {
-      const list = filter(emojisForSearch[category], text, { key: 'search' })
+      // [Fuzzaldrin] filter(arr, text, { key: 'search' }) → customFilterByKey(arr, text, 'search')
+      const list = customFilterByKey(emojisForSearch[category], text, 'search')
       if (list.length) {
         result[category] = list
       }

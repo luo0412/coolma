@@ -270,7 +270,6 @@ module.exports = function (/* ctx */) {
           'electron-util': 'commonjs electron-util',
           'electron-log': 'commonjs electron-log',
           'electron-unhandled': 'commonjs electron-unhandled',
-          'electron-debug': 'commonjs electron-debug',
           'electron-updater': 'commonjs electron-updater',
           'electron-window-state': 'commonjs electron-window-state'
         }

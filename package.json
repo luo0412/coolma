@@ -1,6 +1,6 @@
 {
   "name": "cn.coolma.app",
-  "version": "2.2.4",
+  "version": "0.0.1",
   "description": "An Awesome Note Desktop Application Based On Memocast and WizNote.",
   "productName": "Coolma",
   "author": "luo0412 <1095847440@qq.com>",
@@ -28,8 +28,6 @@
     "cheerio": "^1.0.0-rc.3",
     "core-js": "^3.6.5",
     "dompurify": "^3.3.3",
-    "electron-debug": "3.2.0",
-    "electron-devtools-installer": "3.2.0",
     "electron-log": "4.4.8",
     "electron-serve": "^1.0.0",
     "electron-store": "8.1.0",
@@ -43,7 +41,6 @@
     "file-icons-js": "1.0.3",
     "flowchart.js": "^1.13.0",
     "fs-extra": "^9.0.1",
-    "fuzzaldrin": "^2.1.0",
     "github-markdown-css": "^3.0.1",
     "html-tags": "^3.1.0",
     "joplin-turndown-plugin-gfm": "^1.0.12",
@@ -68,7 +65,6 @@
     "snabbdom": "^0.7.4",
     "snabbdom-to-html": "^5.1.1",
     "turndown": "^6.0.0",
-    "underscore": "^1.9.2",
     "unsplash-js": "^6.0.0",
     "vega": "^5.10.0",
     "vega-embed": "^6.4.0",
@@ -114,5 +110,8 @@
     "node": ">= 18.0.0",
     "npm": ">= 8.0.0",
     "yarn": ">= 1.21.1"
+  },
+  "resolutions": {
+    "@types/minimatch": "5.1.2"
   }
 }
