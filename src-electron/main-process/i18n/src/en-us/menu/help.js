@@ -3,6 +3,6 @@ export default {
   quickStart: 'Quick Start',
   changelog: 'Changelog',
   reportIssue: 'Report Issues',
-  watchOnGithub: 'Watch Memocast on Github',
+  watchOnGithub: 'Watch Coolma on Github',
   license: 'License'
 }

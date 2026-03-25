@@ -74,7 +74,7 @@ export function exportImageOfMarkdown (markdown, kbGuid, docGuid, resources = []
     fs.mkdirSync(path.join(targetDir, 'ExportImage'))
   }
   resources.filter(r => fs.existsSync(path.join(getTempNoteDir(kbGuid, docGuid, 'appData'), r.name))).forEach(r => {
-    const fullName = `memocast://memocast.app/${kbGuid}/${docGuid}/${r.name}`
+    const fullName = `coolma://coolma.app/${kbGuid}/${docGuid}/${r.name}`
     const srcDir = path.join(getTempNoteDir(kbGuid, docGuid, 'appData'), r.name)
     const destDir = path.join(targetDir, 'ExportImage')
     const imageSource = fs.readFileSync(srcDir)

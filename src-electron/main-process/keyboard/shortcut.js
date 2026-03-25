@@ -1,4 +1,4 @@
-import electronLocalshortcut from '@hfelix/electron-localshortcut'
+import { electronLocalshortcut } from '@hfelix/electron-localshortcut'
 import { Menu } from 'electron'
 const isMac = process.platform === 'darwin'
 

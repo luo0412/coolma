@@ -3,6 +3,6 @@ export default {
   quickStart: '快速入门',
   changelog: '修改日志',
   reportIssue: '报告问题与建议',
-  watchOnGithub: '前往 GitHub 上关注 Memocast',
+  watchOnGithub: '前往 GitHub 上关注 Coolma',
   license: '许可证'
 }

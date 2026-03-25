@@ -200,9 +200,9 @@ app.on('activate', () => {
 })
 
 app.setAboutPanelOptions({
-  applicationName: 'Memocast',
-  copyright: 'TankNee',
-  website: 'https://github.com/TankNee/Memocast',
+  applicationName: 'Coolma',
+  copyright: 'luo0412',
+  website: 'https://github.com/luo0412/Coolma',
   iconPath: path.resolve('src-electron/icons', 'linux-512x512.png'),
   applicationVersion: packageJSON.version
 })

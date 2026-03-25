@@ -48,7 +48,7 @@ async function resourceProtocolHandler (request, callback) {
 
 export function registerMemocastProtocol () {
   protocol.registerStreamProtocol(
-    'memocast',
+    'coolma',
     async (request, callback) => {
       //
       const result = await resourceProtocolHandler(request, callback)

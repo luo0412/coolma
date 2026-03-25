@@ -33,7 +33,7 @@ function convertHtml2Markdown (html, kbGuid, docGuid, resources) {
   try {
     resources.forEach(resource => {
       html = html.replace(new RegExp(`index_files/${resource.name}`, 'g'),
-        `memocast://memocast.app/${kbGuid}/${docGuid}/${resource.name}`
+        `coolma://coolma.app/${kbGuid}/${docGuid}/${resource.name}`
       )
     })
     ClientFileStorage.setItemInStore('currentResources', resources)
@@ -67,7 +67,7 @@ function extractMarkdownFromMDNote (html, kbGuid, docGuid, resources = []) {
   resources.forEach(resource => {
     html = html.replace(
       new RegExp(`index_files/${resource.name}`, 'g'),
-      `memocast://memocast.app/${kbGuid}/${docGuid}/${resource.name}`
+      `coolma://coolma.app/${kbGuid}/${docGuid}/${resource.name}`
     )
   })
   ClientFileStorage.setItemInStore('currentResources', resources)
@@ -90,7 +90,7 @@ function embedMDNote (markdown, resources, options) {
     docGuid
   } = options
   resources.forEach(resource => {
-    const imgReg = new RegExp(`memocast://memocast.app/${kbGuid}/${docGuid}/${resource.name}`, 'g')
+    const imgReg = new RegExp(`coolma://coolma.app/${kbGuid}/${docGuid}/${resource.name}`, 'g')
     markdown = markdown.replace(imgReg, `index_files/${resource.name}`)
   })
   return wizMarkdownParser.embed(markdown, options)

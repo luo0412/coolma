@@ -37,7 +37,7 @@ export async function uploadImagesByWiz (imagePaths, options) {
       const data = result.data.result
       saveBuffer(fileBuffer, kbGuid, docGuid, data.name)
       results.push({
-        url: `memocast://memocast.app/${kbGuid}/${docGuid}/${data.name}`,
+        url: `coolma://coolma.app/${kbGuid}/${docGuid}/${data.name}`,
         name: data.name
       })
     }

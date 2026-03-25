@@ -192,7 +192,7 @@ module.exports = function (/* ctx */) {
 
       packager: {
         // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
-        productName: 'Memocast',
+        productName: 'Coolma',
         mac: {
           target: [{
             arch: 'universal',
@@ -211,7 +211,7 @@ module.exports = function (/* ctx */) {
       },
 
       builder: {
-        appId: 'cn.memocast.app',
+        appId: 'cn.coolma.app',
         electronDownload: {
           mirror: 'https://npmmirror.com/mirrors/electron/'
         },
@@ -225,18 +225,18 @@ module.exports = function (/* ctx */) {
             'zip'
           ],
           // eslint-disable-next-line no-template-curly-in-string
-          artifactName: 'Memocast-${version}-${arch}-mac.${ext}'
+          artifactName: 'Coolma-${version}-${arch}-mac.${ext}'
         },
         win: {
           target: [
             'nsis',
             'zip'
           ],
-          legalTrademarks: 'Memocast'
+          legalTrademarks: 'Coolma'
         },
         nsis: {
           // eslint-disable-next-line no-template-curly-in-string
-          artifactName: 'Memocast-${version}-${arch}-win.${ext}',
+          artifactName: 'Coolma-${version}-${arch}-win.${ext}',
           perMachine: false,
           oneClick: false,
           allowToChangeInstallationDirectory: true
@@ -247,9 +247,9 @@ module.exports = function (/* ctx */) {
             'deb',
             'rpm'
           ],
-          vendor: 'Memocast',
+          vendor: 'Coolma',
           // eslint-disable-next-line no-template-curly-in-string
-          artifactName: 'Memocast-${version}-${arch}-linux.${ext}'
+          artifactName: 'Coolma-${version}-${arch}-linux.${ext}'
         },
         files: [
           '**/*',
@@ -272,7 +272,6 @@ module.exports = function (/* ctx */) {
           'electron-unhandled': 'commonjs electron-unhandled',
           'electron-debug': 'commonjs electron-debug',
           'electron-updater': 'commonjs electron-updater',
-          'electron-serve': 'commonjs electron-serve',
           'electron-window-state': 'commonjs electron-window-state'
         }
       }
