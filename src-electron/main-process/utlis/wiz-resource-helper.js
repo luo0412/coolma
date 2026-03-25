@@ -1,16 +1,7 @@
 import fs from 'fs'
-import request from 'request'
+import axios from 'axios'
 import { isBase64, saveBuffer, saveFileInTempPath } from './helper'
 import path from 'path'
-
-function postRequestAsync (url, options) {
-  return new Promise((resolve, reject) => {
-    request.post(url, options, (err, response) => {
-      if (err) reject(err)
-      else resolve(response)
-    })
-  })
-}
 
 export async function uploadImagesByWiz (imagePaths, options) {
   const { kbGuid, docGuid, wizToken, baseUrl } = options
@@ -27,23 +18,24 @@ export async function uploadImagesByWiz (imagePaths, options) {
         filePath = image
       }
 
-      const result = await postRequestAsync(
+      const fileBuffer = fs.readFileSync(filePath)
+      const fileBlob = new Blob([fileBuffer])
+      const formData = new FormData()
+      formData.append('kbGuid', kbGuid)
+      formData.append('docGuid', docGuid)
+      formData.append('data', fileBlob, path.basename(filePath))
+
+      const result = await axios.post(
         `${baseUrl}/ks/resource/upload/${kbGuid}/${docGuid}`,
+        formData,
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
             'X-Wiz-Token': wizToken
-          },
-          json: true,
-          formData: {
-            kbGuid,
-            docGuid,
-            data: fs.createReadStream(filePath)
           }
         }
       )
-      const data = result.body.result
-      saveBuffer(fs.readFileSync(filePath), kbGuid, docGuid, data.name)
+      const data = result.data.result
+      saveBuffer(fileBuffer, kbGuid, docGuid, data.name)
       results.push({
         url: `memocast://memocast.app/${kbGuid}/${docGuid}/${data.name}`,
         name: data.name
