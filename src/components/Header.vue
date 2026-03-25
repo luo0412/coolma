@@ -48,8 +48,9 @@
       <!-- 搜索图标 -->
       <div
         class="header-icon-btn q-electron-drag--exception"
+        :class="{ 'is-highlight': searchHighlight }"
         :title="$t('search')"
-        @click="() => $refs.searchDialog.toggle()"
+        @click="handleSearchClick"
       >
         <i class="el-icon-search icon-custom"></i>
       </div>
@@ -96,8 +97,9 @@
       <!-- 设置按钮 -->
       <div
         class="header-icon-btn q-electron-drag--exception"
+        :class="{ 'is-highlight': settingsHighlight }"
         :title="$t('settings')"
-        @click="$refs.settingsDialog.toggle()"
+        @click="handleSettingsClick"
       >
         <i class="el-icon-setting icon-custom"></i>
       </div>
@@ -198,10 +200,29 @@ export default {
   components: { SearchDialog, TagDialog, SettingsDialog, LoginDialog },
   data () {
     return {
-      isMaximized: false
+      isMaximized: false,
+      searchHighlight: false,
+      settingsHighlight: false
     }
   },
   methods: {
+    handleHighlight (type) {
+      this[type] = true
+      setTimeout(() => {
+        this[type] = false
+      }, 1200)
+    },
+
+    handleSearchClick () {
+      this.handleHighlight('searchHighlight')
+      this.$refs.searchDialog.toggle()
+    },
+
+    handleSettingsClick () {
+      this.handleHighlight('settingsHighlight')
+      this.$refs.settingsDialog.toggle()
+    },
+
     minimize () {
       ipcRenderer.send('window-minimize')
     },
@@ -363,6 +384,30 @@ export default {
 
 .header-icon-btn.is-active .icon-custom {
   color: var(--themeColor);
+}
+
+.header-icon-btn.is-highlight {
+  background-color: var(--themeColor10);
+  animation: highlight-pulse 5s ease-out forwards;
+}
+
+.header-icon-btn.is-highlight::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 16px;
+  height: 2px;
+  background-color: var(--themeColor);
+  border-radius: 1px;
+  animation: highlight-pulse 5s ease-out forwards;
+}
+
+@keyframes highlight-pulse {
+  0% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .header-avatar-wrapper {
