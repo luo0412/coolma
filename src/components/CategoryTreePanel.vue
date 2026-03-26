@@ -33,12 +33,14 @@
         </span>
       </el-tree>
     </q-scroll-area>
+    <TierRankingDialog ref="tierRankingDialog" />
   </div>
 </template>
 
 <script>
 import { createNamespacedHelpers } from 'vuex'
 import { showContextMenu as showSideDrawerContextMenu } from 'src/contextMenu/sideDrawer'
+import TierRankingDialog from 'components/ui/dialog/TierRankingDialog'
 import bus from './bus'
 import events from 'src/constants/events'
 
@@ -52,6 +54,7 @@ const { mapActions: mapClientActions, mapState: mapClientState } = createNamespa
 
 export default {
   name: 'CategoryTreePanel',
+  components: { TierRankingDialog },
   computed: {
     thumbStyle () {
       return {
@@ -120,14 +123,19 @@ export default {
       this.updateCurrentCategory({ data: this.rightClickCategoryItem, type: this.type })
       this.expandFullPaneLayout()
     },
+    openTierRankingHandler: function () {
+      this.$refs.tierRankingDialog.toggle()
+    },
     ...mapServerActions(['updateCurrentCategory']),
     ...mapClientActions(['setRightClickCategoryItem', 'expandFullPaneLayout'])
   },
   mounted () {
     bus.$on(events.SIDE_DRAWER_CONTEXT_MENU.openCategory, this.openCategoryHandler)
+    bus.$on(events.SIDE_DRAWER_CONTEXT_MENU.openTierRanking, this.openTierRankingHandler)
   },
   beforeDestroy () {
     bus.$off(events.SIDE_DRAWER_CONTEXT_MENU.openCategory, this.openCategoryHandler)
+    bus.$off(events.SIDE_DRAWER_CONTEXT_MENU.openTierRanking, this.openTierRankingHandler)
   },
   watch: {
     currentCategory: {

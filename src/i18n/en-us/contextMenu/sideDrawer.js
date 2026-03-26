@@ -1,3 +1,4 @@
 export default {
-  open: 'Open'
+  open: 'Open',
+  openTierRanking: 'Tier Ranking'
 }

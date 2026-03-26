@@ -62,7 +62,8 @@ export default {
     delete: 'side.drawer.context.menu.delete.category',
     exportCategory: {
       markdown: 'side.drawer.context.menu.export.markdown'
-    }
+    },
+    openTierRanking: 'side.drawer.context.menu.open.tier.ranking'
   },
   MARK_MAP_CONTEXT_MENU: {
     saveAsPNG: 'mark.map.context.menu.save.as.png',
