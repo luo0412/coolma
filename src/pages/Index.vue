@@ -54,7 +54,7 @@
             </transition-group>
           </div>
           <div v-show='!isOutlineShow' class='editor-action-bar'>
-            <div class='editor-action-bar-inner'>
+            <div class='editor-action-bar-inner editor-action-bar-inner--reversed'>
               <q-btn
                 v-if='showEditorNoteFab'
                 :icon='editorNoteActionsExpanded ? "close" : "post_add"'
@@ -569,37 +569,27 @@ export default {
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* 固定高度：展开「新建/导入」子项时与收起时占位一致（恰好容纳 6 个按钮） */
+/* 按钮组内反向排列，最常用按钮在最下 */
 .editor-action-bar-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 200px;
   justify-content: flex-start;
 }
 
-/* 主图标与下一项：收起时与下方工具钮略大；展开时与子操作区略大 */
-.editor-note-trigger + .editor-note-sub-actions {
-  margin-top: 10px;
-}
-
-.editor-note-trigger + .q-btn.fab-icon {
-  margin-top: 8px;
-}
-
-.editor-action-bar-inner > .q-btn.fab-icon:not(.editor-note-trigger) + .q-btn.fab-icon {
-  margin-top: 2px;
+.editor-action-bar-inner--reversed {
+  flex-direction: column-reverse;
 }
 
 .editor-note-sub-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 2px;
 }
 
-/* 子操作之间略紧于「主图标→首子项」间距 */
-.editor-note-sub-actions .fab-icon + .fab-icon {
-  margin-top: 4px;
+.editor-action-bar-inner--reversed {
+  gap: 2px;
 }
 
 /* 全局 .fab-icon { margin: 40px } 在纵向堆叠时会叠成巨大间距，此处恢复为原独立浮动时的紧凑感 */
