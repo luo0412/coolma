@@ -1,5 +1,5 @@
 <template>
-  <div class='monaco-root flex justify-center full-height full-width'>
+  <div class='monaco-root flex justify-center full-width' style="height: calc(100vh - 45px);">
     <div
       id='monaco'
       class='full-height full-width'
