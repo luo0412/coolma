@@ -228,12 +228,26 @@ export default {
 }
 
 .note-list-bottom {
-  max-height: 4.5vh;
-  padding: 4px !important;
+  max-height: 3vh;
+  padding: 2px !important;
   color: #9b9b9b;
   user-select: none;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: bold;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif, 黑体;
+}
+
+/* 减少笔记项之间的间距 */
+.note-item,
+.note-item-dark {
+  min-height: 0 !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+/* 移除分割线（如果有的话） */
+.note-item::after,
+.note-item-dark::after {
+  display: none !important;
 }
 </style>
