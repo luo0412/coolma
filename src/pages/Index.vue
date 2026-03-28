@@ -51,19 +51,89 @@
               <Illustration :mode='illustrationMode' key='illustration' />
             </transition-group>
           </div>
-          <div class='editor-action-bar'>
-            <q-btn
-              icon='format_align_center'
-              dense
-              flat
-              round
-              class='fab-icon cursor-pointer material-icons-round'
-              @click.stop='$refs.outlineDrawer.show'
-              size='md'
-              color='#26A69A'
-              v-show='dataLoaded && contentsListLoaded && !isOutlineShow && !isSourceMode'
-              v-ripple
-            />
+          <div v-show='!isOutlineShow' class='editor-action-bar'>
+            <div class='editor-action-bar-inner'>
+              <q-btn
+                v-if='showEditorNoteFab'
+                :icon='editorNoteActionsExpanded ? "close" : "post_add"'
+                dense
+                flat
+                round
+                class='fab-icon cursor-pointer material-icons-round editor-note-trigger'
+                @click='toggleEditorNoteActions'
+                size='md'
+                color='#26A69A'
+                v-ripple
+              >
+                <q-tooltip
+                  v-if='!editorNoteActionsExpanded'
+                  anchor='center left'
+                  self='center right'
+                  :offset='[10, 10]'
+                >{{ $t('createNote') }} / {{ $t('import') }}</q-tooltip>
+                <q-tooltip
+                  v-else
+                  anchor='center left'
+                  self='center right'
+                  :offset='[10, 10]'
+                >{{ $t('cancel') }}</q-tooltip>
+              </q-btn>
+              <div
+                v-if='showEditorNoteFab && editorNoteActionsExpanded'
+                class='editor-note-sub-actions'
+              >
+                <q-btn
+                  v-if='noteFabIsRootCategory'
+                  icon='create_new_folder'
+                  dense
+                  flat
+                  round
+                  class='fab-icon cursor-pointer material-icons-round'
+                  @click='addCategoryFromEditorBar'
+                  size='md'
+                  color='#26A69A'
+                  v-ripple
+                  :title='$t("createCategory")'
+                />
+                <template v-else>
+                  <q-btn
+                    icon='note_add'
+                    dense
+                    flat
+                    round
+                    class='fab-icon cursor-pointer material-icons-round'
+                    @click='addNoteFromEditorBar'
+                    size='md'
+                    color='#26A69A'
+                    v-ripple
+                    :title='$t("createNote")'
+                  />
+                  <q-btn
+                    icon='add'
+                    dense
+                    flat
+                    round
+                    class='fab-icon cursor-pointer material-icons-round'
+                    @click='openImportFromEditorBar'
+                    size='md'
+                    color='#26A69A'
+                    v-ripple
+                    :title='$t("import")'
+                  />
+                </template>
+              </div>
+              <q-btn
+                icon='format_align_center'
+                dense
+                flat
+                round
+                class='fab-icon cursor-pointer material-icons-round'
+                @click.stop='$refs.outlineDrawer.show'
+                size='md'
+                color='#26A69A'
+                v-show='!editorNoteActionsExpanded && dataLoaded && contentsListLoaded && !isOutlineShow && !isSourceMode'
+                v-ripple
+              />
             <q-btn
               icon='dashboard'
               dense
@@ -72,7 +142,7 @@
               class='fab-icon cursor-pointer material-icons-round'
               size='md'
               color='#26A69A'
-              v-show='dataLoaded && !isOutlineShow && !isSourceMode'
+              v-show='!editorNoteActionsExpanded && dataLoaded && !isOutlineShow && !isSourceMode'
               v-ripple
             >
               <q-tooltip
@@ -96,7 +166,7 @@
               @click='isSourceMode = !isSourceMode'
               size='md'
               color='#26A69A'
-              v-show='dataLoaded && !isOutlineShow'
+              v-show='!editorNoteActionsExpanded && dataLoaded && !isOutlineShow'
               v-ripple
               :title="!isSourceMode ? $t('sourceMode') : $t('previewMode')"
             />
@@ -109,7 +179,7 @@
               @click='lockModeHandler'
               size='md'
               color='#26A69A'
-              v-show='dataLoaded && !isOutlineShow'
+              v-show='!editorNoteActionsExpanded && dataLoaded && !isOutlineShow'
               v-ripple
               :title="enablePreviewEditor ? $t('lock') : $t('unlock')"
             />
@@ -122,9 +192,11 @@
               @click='refreshCurrentNote'
               size='md'
               color='#26A69A'
-              v-show='dataLoaded && !isOutlineShow'
+              v-show='!editorNoteActionsExpanded && dataLoaded && !isOutlineShow'
               v-ripple
             />
+            <ImportDialog ref='importDialog' />
+            </div>
           </div>
         </div>
         <NoteOutlineDrawer ref='outlineDrawer' :change='outlineDrawerChangeHandler' />
@@ -149,10 +221,12 @@ import Monaco from 'components/ui/editor/Monaco.vue'
 import Muya from 'components/ui/editor/Muya.vue'
 import MarkMapDialog from '../components/ui/dialog/MarkMapDialog.vue'
 import Illustration from 'src/components/ui/Illustration.vue'
+import ImportDialog from 'components/ui/dialog/ImportDialog.vue'
 
 const {
   mapGetters: mapServerGetters,
-  mapState: mapServerState
+  mapState: mapServerState,
+  mapActions: mapServerActions
 } = createNamespacedHelpers('server')
 const { mapState: mapClientState, mapActions: mapClientActions } = createNamespacedHelpers('client')
 // import Sidebar from '../components/Sidebar'
@@ -167,7 +241,8 @@ export default {
     NoteOutlineDrawer,
     NoteList,
     CategoryTreePanel,
-    Illustration
+    Illustration,
+    ImportDialog
   },
   computed: {
     thumbStyle () {
@@ -195,14 +270,31 @@ export default {
     contentsListLoaded: function () {
       return this.contentsList && !!this.contentsList.length
     },
+    noteFabIsRootCategory: function () {
+      return helper.isNullOrEmpty(this.currentCategory)
+    },
+    noteFabIsTagCategory: function () {
+      return this.tags?.map(t => t.tagGuid).includes(this.currentCategory)
+    },
+    showEditorNoteFab: function () {
+      return this.isLogin && !this.noteFabIsTagCategory
+    },
     ...mapServerGetters(['currentNote', 'currentNoteInfo']),
-    ...mapServerState(['contentsList', 'isCurrentNoteLoading', 'noteState']),
+    ...mapServerState([
+      'contentsList',
+      'isCurrentNoteLoading',
+      'noteState',
+      'isLogin',
+      'currentCategory',
+      'tags'
+    ]),
     ...mapClientState([
       'noteListVisible',
       'categoryTreeVisible',
       'enablePreviewEditor',
       'splitterWidth',
-      'leftInnerSplitterRatio'
+      'leftInnerSplitterRatio',
+      'rightClickCategoryItem'
     ])
   },
   data () {
@@ -222,7 +314,8 @@ export default {
         paragraph: '0',
         character: '0'
       },
-      saveButtonIcon: 'save'
+      saveButtonIcon: 'save',
+      editorNoteActionsExpanded: false
     }
   },
   methods: {
@@ -276,9 +369,66 @@ export default {
     persistSplitterWidth () {
       this.updateStateAndStore({ splitterWidth: this.splitterWidthValue })
     },
+    addNoteHandler: function () {
+      this.$q
+        .dialog({
+          title: this.$t('createNote'),
+          prompt: {
+            model: this.$t('noteTitle'),
+            type: 'text',
+            attrs: {
+              spellcheck: false
+            },
+            label: this.$t('title')
+          },
+          ok: this.$t('confirm'),
+          cancel: this.$t('cancel')
+        })
+        .onOk(data => {
+          this.createNote(data)
+        })
+    },
+    addCategoryHandler: function () {
+      this.$q
+        .dialog({
+          title: this.$t('createCategory'),
+          prompt: {
+            model: this.$t('categoryName'),
+            type: 'text',
+            attrs: {
+              spellcheck: false
+            }
+          },
+          ok: this.$t('confirm'),
+          cancel: this.$t('cancel')
+        })
+        .onOk(data => {
+          this.createCategory({
+            childCategoryName: data,
+            parentCategory: helper.isNullOrEmpty(this.currentCategory) ? '' : this.rightClickCategoryItem
+          })
+        })
+    },
+    toggleEditorNoteActions: function () {
+      this.editorNoteActionsExpanded = !this.editorNoteActionsExpanded
+    },
+    addCategoryFromEditorBar: function () {
+      this.addCategoryHandler()
+      this.editorNoteActionsExpanded = false
+    },
+    addNoteFromEditorBar: function () {
+      this.addNoteHandler()
+      this.editorNoteActionsExpanded = false
+    },
+    openImportFromEditorBar: function () {
+      this.$refs.importDialog.toggle()
+      this.editorNoteActionsExpanded = false
+    },
+    ...mapServerActions(['createNote', 'createCategory']),
     ...mapClientActions(['toggleChanged', 'updateStateAndStore'])
   },
   mounted () {
+    bus.$on(events.SIDE_DRAWER_CONTEXT_MENU.createCategory, this.addCategoryHandler)
     bus.$on(events.VIEW_SHORTCUT_CALL.lockMode, this.lockModeHandler)
     bus.$on(events.VIEW_SHORTCUT_CALL.sourceMode, this.sourceModeHandler)
     bus.$on(events.GENERATE_MINDMAP, this.generateMindmapHandler)
@@ -300,6 +450,7 @@ export default {
     }
   },
   beforeDestroy () {
+    bus.$off(events.SIDE_DRAWER_CONTEXT_MENU.createCategory, this.addCategoryHandler)
     if (this.leftInnerSplitterSaveTimer) {
       clearTimeout(this.leftInnerSplitterSaveTimer)
     }
@@ -373,6 +524,9 @@ export default {
         this.leftInnerSplitterLimits = [150, Infinity]
         this.leftInnerSplitterValue = this.leftInnerSplitterRatio || 280
       }
+    },
+    showEditorNoteFab: function (val) {
+      if (!val) this.editorNoteActionsExpanded = false
     }
   }
 }
@@ -411,6 +565,39 @@ export default {
   background: rgba(240, 240, 240, 0.88);
   border-radius: 10px;
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 固定高度：展开「新建/导入」子项时与收起时占位一致（恰好容纳 6 个按钮） */
+.editor-action-bar-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 200px;
+  justify-content: flex-start;
+}
+
+/* 主图标与下一项：收起时与下方工具钮略大；展开时与子操作区略大 */
+.editor-note-trigger + .editor-note-sub-actions {
+  margin-top: 10px;
+}
+
+.editor-note-trigger + .q-btn.fab-icon {
+  margin-top: 8px;
+}
+
+.editor-action-bar-inner > .q-btn.fab-icon:not(.editor-note-trigger) + .q-btn.fab-icon {
+  margin-top: 2px;
+}
+
+.editor-note-sub-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 子操作之间略紧于「主图标→首子项」间距 */
+.editor-note-sub-actions .fab-icon + .fab-icon {
+  margin-top: 4px;
 }
 
 /* 全局 .fab-icon { margin: 40px } 在纵向堆叠时会叠成巨大间距，此处恢复为原独立浮动时的紧凑感 */

@@ -35,68 +35,7 @@
       >
         <span>{{ category }}</span>
       </q-card>
-      <q-fab
-        :color="color"
-        icon="post_add"
-        direction="up"
-        padding="11px"
-        class="absolute-bottom-right fab-btn"
-        v-if="isLogin && !isTagCategory"
-      >
-        <!-- <q-fab-action
-          v-if="!isRootCategory"
-          :color="color"
-          icon="import_export"
-          @click="exportCategoryHandler"
-        >
-          <q-tooltip
-            anchor="center right"
-            self="center left"
-            :offset="[20, 10]"
-            :content-class="`bg-${color} text-white shadow-4  text-h7`"
-            >{{ $t('export') }}</q-tooltip
-          >
-        </q-fab-action> -->
-        <q-fab-action
-          v-if="!isRootCategory"
-          :color="color"
-          icon="add"
-          @click="$refs.ImportDialog.toggle()"
-        >
-          <q-tooltip
-            anchor="center right"
-            self="center left"
-            :offset="[20, 10]"
-            :content-class="`bg-${color} text-white shadow-4  text-h7`"
-            >{{ $t('import') }}</q-tooltip
-          >
-        </q-fab-action>
-        <q-fab-action v-if="!isRootCategory" :color="color" icon="note_add" @click="addNoteHandler">
-          <q-tooltip
-            anchor="center right"
-            self="center left"
-            :offset="[20, 10]"
-            :content-class="`bg-${color} text-white shadow-4  text-h7`"
-            >{{ $t('createNote') }}</q-tooltip
-          >
-        </q-fab-action>
-        <q-fab-action
-          :color="color"
-          v-if="isRootCategory"
-          icon="create_new_folder"
-          @click="addCategoryHandler"
-        >
-          <q-tooltip
-            anchor="center right"
-            self="center left"
-            :offset="[20, 10]"
-            :content-class="`bg-${color} text-white shadow-4  text-h7`"
-          >{{ $t('createCategory') }}</q-tooltip
-          >
-        </q-fab-action>
-      </q-fab>
       <Loading :visible="isCurrentNotesLoading" />
-      <ImportDialog ref="ImportDialog" />
     <CategoryDialog ref='categoryDialog' :note-info='rightClickNoteItem' :label='categoryDialogLabel'
                     :handler='categoryDialogHandler' />
     </q-pull-to-refresh>
@@ -105,7 +44,6 @@
 
 <script>
 import NoteItem from './ui/NoteItem'
-import ImportDialog from './ui/dialog/ImportDialog.vue'
 import CategoryDialog from './ui/dialog/CategoryDialog'
 import { createNamespacedHelpers } from 'vuex'
 import { Loading, QSpinnerGears } from 'quasar'
@@ -118,7 +56,7 @@ const { mapGetters: mapServerGetters, mapState: mapServerState, mapActions: mapS
 const { mapState: mapClientState, mapActions: mapClientActions } = createNamespacedHelpers('client')
 export default {
   name: 'NoteList',
-  components: { Loading, NoteItem, ImportDialog, CategoryDialog },
+  components: { Loading, NoteItem, CategoryDialog },
   data () {
     return {
       categoryDialogLabel: '',
@@ -140,9 +78,6 @@ export default {
         width: '5px'
       }
     },
-    isRootCategory: function () {
-      return helper.isNullOrEmpty(this.currentCategory)
-    },
     category: function () {
       if (helper.isNullOrEmpty(this.currentCategory)) return ''
       const tagIndex = this.tags.findIndex(
@@ -160,57 +95,11 @@ export default {
         }
       }
     },
-    color: function () {
-      return this.$q.dark.isActive ? 'warning' : 'primary'
-    },
-    isTagCategory: function () {
-      return this.tags?.map(t => t.tagGuid).includes(this.currentCategory)
-    },
     ...mapServerGetters(['activeNote', 'currentNotes']),
     ...mapServerState(['isCurrentNotesLoading', 'currentCategory', 'isLogin', 'tags', 'currentNote']),
     ...mapClientState(['rightClickCategoryItem', 'rightClickNoteItem', 'noteListDenseMode'])
   },
   methods: {
-    addNoteHandler: function () {
-      this.$q
-        .dialog({
-          title: this.$t('createNote'),
-          prompt: {
-            model: this.$t('noteTitle'),
-            type: 'text',
-            attrs: {
-              spellcheck: false
-            },
-            label: this.$t('title')
-          },
-          ok: this.$t('confirm'),
-          cancel: this.$t('cancel')
-        })
-        .onOk(data => {
-          this.createNote(data)
-        })
-    },
-    addCategoryHandler: function () {
-      this.$q
-        .dialog({
-          title: this.$t('createCategory'),
-          prompt: {
-            model: this.$t('categoryName'),
-            type: 'text',
-            attrs: {
-              spellcheck: false
-            }
-          },
-          ok: this.$t('confirm'),
-          cancel: this.$t('cancel')
-        })
-        .onOk(data => {
-          this.createCategory({
-            childCategoryName: data,
-            parentCategory: helper.isNullOrEmpty(this.currentCategory) ? '' : this.rightClickCategoryItem
-          })
-        })
-    },
     deleteCategoryHandler: function () {
       if (helper.isNullOrEmpty(this.rightClickCategoryItem)) return
       this.$q
@@ -298,8 +187,6 @@ export default {
       showNoteItemContextMenu(e, isCurrentNote)
     },
     ...mapServerActions([
-      'createNote',
-      'createCategory',
       'deleteCategory',
       'updateCurrentCategory',
       'exportMarkdownFiles',
@@ -314,8 +201,6 @@ export default {
     ...mapClientActions(['setRightClickNoteItem'])
   },
   mounted () {
-    bus.$on(events.SIDE_DRAWER_CONTEXT_MENU.createCategory, this.addCategoryHandler)
-    // bus.$on(events.SIDE_DRAWER_CONTEXT_MENU.createNote, this.addNoteHandler)
     bus.$on(events.SIDE_DRAWER_CONTEXT_MENU.exportCategory.markdown, this.exportCategoryHandler)
     bus.$on(events.SIDE_DRAWER_CONTEXT_MENU.delete, this.deleteCategoryHandler)
     bus.$on(events.NOTE_ITEM_CONTEXT_MENU.rename, this.renameNoteHandler)
