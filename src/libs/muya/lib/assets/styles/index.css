@@ -490,7 +490,7 @@ figure[data-role=HTML]:not(.ag-active):hover .ag-container-icon {
   display: block;
 }
 
-table {
+#ag-editor-id table {
   border-collapse: collapse;
   margin-top: 0;
 }
