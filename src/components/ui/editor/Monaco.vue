@@ -119,38 +119,54 @@ export default {
 
       // Check if Electron clipboard is available
       const hasElectronClipboard = () => {
-        return typeof window !== 'undefined' &&
-               window.__electronClipboard &&
-               typeof window.__electronClipboard.readText === 'function'
+        if (typeof window === 'undefined') {
+          console.log('[Monaco] hasElectronClipboard: window is undefined')
+          return false
+        }
+        const clipboard = window.__electronClipboard
+        const hasClipboard = !!(clipboard && typeof clipboard.readText === 'function')
+        console.log('[Monaco] hasElectronClipboard:', hasClipboard, 'clipboard:', clipboard)
+        return hasClipboard
       }
 
-      // Intercept copy at container level
+      // Use capture phase to intercept events before Monaco's internal handlers
+      // Intercept copy at container level (capture phase)
       monacoContainer.addEventListener('copy', (e) => {
         const selectedText = getSelectedText()
+        console.log('[Monaco] copy event (capture) triggered, selectedText length:', selectedText?.length || 0)
         if (selectedText && hasElectronClipboard()) {
           // Give Monaco time to copy to its internal clipboard, then sync to Electron
           setTimeout(() => {
             window.__electronClipboard.writeText(selectedText)
+            console.log('[Monaco] copy synced to Electron clipboard')
           }, 0)
+        } else {
+          console.log('[Monaco] copy: Electron clipboard not available')
         }
-      })
+      }, true) // true = capture phase
 
-      // Intercept cut at container level
+      // Intercept cut at container level (capture phase)
       monacoContainer.addEventListener('cut', (e) => {
         const selectedText = getSelectedText()
+        console.log('[Monaco] cut event (capture) triggered, selectedText length:', selectedText?.length || 0)
         if (selectedText && hasElectronClipboard()) {
           setTimeout(() => {
             window.__electronClipboard.writeText(selectedText)
+            console.log('[Monaco] cut synced to Electron clipboard')
           }, 0)
+        } else {
+          console.log('[Monaco] cut: Electron clipboard not available')
         }
-      })
+      }, true) // true = capture phase
 
-      // Intercept paste at container level
+      // Intercept paste at container level (capture phase)
       monacoContainer.addEventListener('paste', (e) => {
+        console.log('[Monaco] paste event (capture) triggered')
         // Read from Electron clipboard and paste as plain text
         if (hasElectronClipboard()) {
           e.preventDefault()
           const text = window.__electronClipboard.readText()
+          console.log('[Monaco] paste - reading from Electron clipboard:', text ? `${text.length} chars` : 'empty')
           if (text !== null && text !== undefined && text !== '') {
             const selection = self.contentEditor.getSelection()
             self.contentEditor.executeEdits('paste', [{
@@ -159,8 +175,10 @@ export default {
               forceMoveMarkers: true
             }])
           }
+        } else {
+          console.log('[Monaco] paste: Electron clipboard not available, using default')
         }
-      })
+      }, true) // true = capture phase
 
       // Register copyAsMarkdown, copyAsHtml, pasteAsPlainText actions consumed by the app
       this.contentEditor.addAction({

@@ -98,7 +98,7 @@ module.exports = function (/* ctx */) {
           languages: ['markdown', 'yaml', 'json', 'html', 'css', 'typescript', 'javascript'],
           features: [
             'bracketMatching',
-            // 'clipboard', // Disabled - we use custom Electron clipboard implementation
+            'clipboard',
             'codeAction',
             'codelens',
             'colorDetector',
