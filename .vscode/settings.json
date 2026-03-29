@@ -4,5 +4,5 @@
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "vue"],
 
   "vetur.experimental.templateInterpolationService": true,
-  "snyk.advanced.autoSelectOrganization": true
+  "snyk.advanced.autoSelectOrganization": false
 }
