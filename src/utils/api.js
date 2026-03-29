@@ -1,6 +1,7 @@
 import { execRequest } from 'boot/request'
 import FormData from 'form-data'
 import { UploadImageToCustomWebService } from 'src/service/imageCustomWebUploadService'
+import ServerFileStorage from 'src/utils/storage/ServerFileStorage'
 let AccountServerBaseUrl = 'https://as.wiz.cn'
 let KnowledgeBaseBaseUrl = 'https://kshttps0.wiz.cn'
 
@@ -304,41 +305,53 @@ const KnowledgeBaseApi = {
    * @returns {Promise<number>}
    */
   async getTagNoteCount (params) {
-    const pageSize = 500
     let allNotes = []
     let start = 0
     const tagGuid = params.data.tag
+    const baseUrl = this.getBaseUrl()
+    const token = ServerFileStorage.getValueFromLocalStorage('token')
 
     for (;;) {
-      const requestParams = {
+      const queryParams = new URLSearchParams({
         tag: tagGuid,
-        start,
-        count: pageSize,
-        withAbstract: true,
-        orderBy: 'created',
-        ascending: 'asc'
-      }
+        start: String(start),
+        count: '50',
+        withAbstract: 'false',
+        orderBy: 'modified',
+        ascending: 'desc'
+      })
+      const url = `${baseUrl}/ks/note/list/tag/${params.kbGuid}?${queryParams.toString()}`
 
-      let batch
+      let rawResponse
       try {
-        batch = await execRequest(
-          'GET',
-          `${this.getBaseUrl()}/ks/note/list/tag/${params.kbGuid}`,
-          null,
-          null,
-          { params: requestParams }
-        )
-      } catch {
+        const res = await fetch(url, {
+          headers: {
+            'X-Wiz-Token': token
+          }
+        })
+        const data = await res.json()
+        if (data.returnCode !== 200) {
+          throw new Error(data.returnMessage)
+        }
+        rawResponse = data.result
+      } catch (err) {
+        console.error(`[getTagNoteCount] Error:`, err.message)
         return 0
       }
 
-      if (!batch || !Array.isArray(batch) || batch.length === 0) break
+      if (!rawResponse || !Array.isArray(rawResponse)) {
+        break
+      }
 
-      allNotes = allNotes.concat(batch)
+      if (rawResponse.length === 0) {
+        break
+      }
 
-      if (batch.length < pageSize) break
+      allNotes = allNotes.concat(rawResponse)
 
-      start += pageSize
+      if (rawResponse.length < 50) break
+
+      start += 50
       if (allNotes.length >= 10000) break
     }
 

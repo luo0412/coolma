@@ -217,11 +217,16 @@ export default {
               shadowColor: 'rgba(0, 0, 0, 0.3)'
             }
           },
-          visualMin: 100,
-          visualMax: 400,
-          color: isDark
-            ? ['#4a9eff', '#50c9a8', '#f5a623', '#e74c3c', '#9b59b6', '#1abc9c', '#3498db']
-            : ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#1890ff'],
+          levels: [{
+            itemStyle: {
+              borderColor: isDark ? '#2d2d2d' : '#fff',
+              borderWidth: 2,
+              gapWidth: 2
+            },
+            color: isDark
+              ? ['#4a9eff', '#50c9a8', '#f5a623', '#e74c3c', '#9b59b6', '#1abc9c', '#3498db']
+              : ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#1890ff']
+          }],
           data: this.tagChartData
         }]
       }
@@ -251,6 +256,16 @@ export default {
 
       this.tagChart.setOption({
         series: [{
+          levels: [{
+            itemStyle: {
+              borderColor: isDark ? '#2d2d2d' : '#fff',
+              borderWidth: 2,
+              gapWidth: 2
+            },
+            color: isDark
+              ? ['#4a9eff', '#50c9a8', '#f5a623', '#e74c3c', '#9b59b6', '#1abc9c', '#3498db']
+              : ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#1890ff']
+          }],
           data: this.tagChartData.map(item => ({
             ...item,
             itemStyle: {

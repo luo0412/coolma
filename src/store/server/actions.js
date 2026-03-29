@@ -862,15 +862,11 @@ export default {
     const countMap = {}
     await Promise.all(
       tags.map(async tag => {
-        try {
-          const count = await api.KnowledgeBaseApi.getTagNoteCount({
-            kbGuid,
-            data: { tag: tag.tagGuid }
-          })
-          countMap[tag.tagGuid] = count
-        } catch {
-          countMap[tag.tagGuid] = 0
-        }
+        const count = await api.KnowledgeBaseApi.getTagNoteCount({
+          kbGuid,
+          data: { tag: tag.tagGuid }
+        })
+        countMap[tag.tagGuid] = count
       })
     )
 

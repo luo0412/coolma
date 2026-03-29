@@ -56,7 +56,7 @@ const { mapGetters: mapServerGetters, mapState: mapServerState, mapActions: mapS
 const { mapState: mapClientState, mapActions: mapClientActions } = createNamespacedHelpers('client')
 export default {
   name: 'NoteList',
-  components: { Loading, NoteItem, CategoryDialog },
+  components: { Loading, NoteItem, CategoryDialog, Loading: LoadingComponent },
   data () {
     return {
       categoryDialogLabel: '',

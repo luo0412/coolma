@@ -6,6 +6,8 @@ export default {
   selfHostServer: '私有部署服务器地址',
   signIn: '登录',
   signUp: '注册',
+  close: '关闭',
+  confirm: '确定',
   fieldIsRequired: '该字段必须填写',
   fieldShouldStartWithHTTP: '私有部署服务器地址需要以 http 开头',
   rememberPassword: '记住密码',
