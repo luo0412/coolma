@@ -30,10 +30,18 @@
         class="header-icon-btn q-electron-drag--exception"
         :class="{ 'is-active': sidebarTreeType === 'category' }"
         :title="$t('noteCategory')"
+        style="max-width: 150px;width: unset;padding-left: 3px;padding-right: 5px;"
         @click="toggleCategoryDrawer"
       >
         <i class="el-icon-folder icon-custom" />
+
+        <!-- 选中文件夹名称 -->
+        <span
+          v-if="currentCategoryName"
+          class="header-category-name"
+        >{{ currentCategoryName }}</span>
       </div>
+
 
       <!-- 标签图标 -->
       <div
@@ -208,8 +216,8 @@ const {
 export default {
   name: 'Header',
   computed: {
-    ...mapServerState(['user', 'isLogin', 'currentNote', 'noteState']),
-    ...mapServerGetters(['avatarUrl', 'tagsOfCurrentNote']),
+    ...mapServerState(['user', 'isLogin', 'currentNote', 'noteState', 'currentCategory']),
+    ...mapServerGetters(['avatarUrl', 'tagsOfCurrentNote', 'categories']),
     ...mapClientState([
       'shrinkInTray',
       'autoLogin',
@@ -238,6 +246,11 @@ export default {
     },
     tags: function () {
       return this.tagsOfCurrentNote.map(t => t.name)
+    },
+    currentCategoryName: function () {
+      if (!this.currentCategory) return ''
+      const category = this.findCategoryByKey(this.categories, this.currentCategory)
+      return category ? category.label : ''
     }
   },
   components: { SearchDialog, TagDialog, SettingsDialog, LoginDialog },
@@ -249,6 +262,16 @@ export default {
     }
   },
   methods: {
+    findCategoryByKey (categories, key) {
+      for (const cat of categories) {
+        if (cat.key === key) return cat
+        if (cat.children && cat.children.length > 0) {
+          const found = this.findCategoryByKey(cat.children, key)
+          if (found) return found
+        }
+      }
+      return null
+    },
     handleHighlight (type) {
       this[type] = true
       setTimeout(() => {
@@ -398,6 +421,17 @@ export default {
   gap: 4px;
 }
 
+.header-category-name {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--themeColor);
+  font-weight: 500;
+  margin-left: 2px;
+}
+
 .header-right-icons {
   display: flex;
   align-items: center;
@@ -422,6 +456,8 @@ export default {
 
 .header-icon-btn.is-active {
   background-color: var(--themeColor10);
+  border: 1px solid var(--themeColor30);
+  box-shadow: 0 2px 8px var(--themeColor20);
 }
 
 .header-icon-btn.is-active::after {
@@ -438,8 +474,8 @@ export default {
 
 .header-icon-btn .icon-custom {
   font-size: 18px;
-  color: var(--iconColor);
-  transition: color 0.2s ease;
+  color: var(--iconColor, #6b7280);
+  transition: all 0.2s ease;
 }
 
 .header-icon-btn:hover .icon-custom {
@@ -448,6 +484,7 @@ export default {
 
 .header-icon-btn.is-active .icon-custom {
   color: var(--themeColor);
+  filter: drop-shadow(0 1px 2px var(--themeColor40));
 }
 
 .header-icon-btn.is-highlight {
