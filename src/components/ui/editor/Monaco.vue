@@ -109,21 +109,21 @@ export default {
       // Override Monaco's built-in clipboard to use Electron clipboard
       // This ensures copy/paste works correctly in Electron environment
       const self = this
-      const monacoContainer = document.getElementById('monaco')
 
       // Use Monaco's built-in clipboard service override for better Electron integration
       if (window.__electronClipboard) {
-        // Override copy command
+        // Override copy command - use Monaco's default action and sync to Electron clipboard
         this.contentEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyC, () => {
           const selection = self.contentEditor.getSelection()
           const selectedText = self.contentEditor.getModel().getValueInRange(selection)
           if (selectedText) {
             window.__electronClipboard.writeText(selectedText)
-            // Let Monaco handle the visual selection update
           }
+          // Trigger Monaco's default copy action to handle selection cleanup
+          self.contentEditor.trigger('keyboard', 'editor.action.clipboardCopyAction', null)
         })
 
-        // Override paste command
+        // Override paste command - read from Electron clipboard, then let Monaco handle insertion
         this.contentEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyV, () => {
           const text = window.__electronClipboard.readText()
           if (text) {
@@ -136,37 +136,17 @@ export default {
           }
         })
 
-        // Override cut command
+        // Override cut command - sync to Electron clipboard, then trigger Monaco's default cut
         this.contentEditor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyX, () => {
           const selection = self.contentEditor.getSelection()
           const selectedText = self.contentEditor.getModel().getValueInRange(selection)
           if (selectedText) {
             window.__electronClipboard.writeText(selectedText)
-            self.contentEditor.executeEdits('cut', [{
-              range: selection,
-              text: '',
-              forceMoveMarkers: true
-            }])
           }
+          // Trigger Monaco's default cut action to handle selection cleanup and deletion
+          self.contentEditor.trigger('keyboard', 'editor.action.clipboardCutAction', null)
         })
       }
-
-      // Fallback: intercept events at container level for text operations
-      monacoContainer.addEventListener('paste', (e) => {
-        if (!window.__electronClipboard) {
-          // Use browser clipboard API as fallback
-          navigator.clipboard.readText().then(text => {
-            if (text) {
-              const selection = self.contentEditor.getSelection()
-              self.contentEditor.executeEdits('paste', [{
-                range: selection,
-                text: text,
-                forceMoveMarkers: true
-              }])
-            }
-          }).catch(() => {})
-        }
-      }, false)
 
       // Register copyAsMarkdown, copyAsHtml, pasteAsPlainText actions consumed by the app
       this.contentEditor.addAction({
@@ -231,6 +211,17 @@ export default {
         this.updateNote(this.contentEditor.getValue())
       }
     },
+    handleGlobalKeyDown: function (event) {
+      // Handle Ctrl+S (Cmd+S on Mac) globally to ensure save works in Monaco
+      if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+        event.preventDefault()
+        event.stopPropagation()
+        // Directly trigger save without checking active state for better responsiveness
+        if (this.contentEditor) {
+          this.updateNote(this.contentEditor.getValue())
+        }
+      }
+    },
     getValue: function () {
       return this.contentEditor?.getValue()
     },
@@ -249,6 +240,8 @@ export default {
     ...mapServerActions(['updateNote', 'updateNoteState'])
   },
   mounted () {
+    // Add global keydown listener for Ctrl+S to ensure save works even when Monaco captures the event
+    document.addEventListener('keydown', this.handleGlobalKeyDown)
     this.initMonaco()
     bus.$on(events.EDIT_SHORTCUT_CALL.save, this.saveHandler)
     bus.$on(events.EDIT_SHORTCUT_CALL.copyAsMarkdown, this.editCopyPasteHandler)
@@ -258,6 +251,7 @@ export default {
     bus.$on(events.EDIT_SHORTCUT_CALL.redo, this.editCopyPasteHandler)
   },
   beforeDestroy () {
+    document.removeEventListener('keydown', this.handleGlobalKeyDown)
     bus.$off(events.EDIT_SHORTCUT_CALL.save, this.saveHandler)
     bus.$off(events.EDIT_SHORTCUT_CALL.copyAsMarkdown, this.editCopyPasteHandler)
     bus.$off(events.EDIT_SHORTCUT_CALL.copyAsHtml, this.editCopyPasteHandler)

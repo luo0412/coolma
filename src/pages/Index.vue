@@ -430,11 +430,16 @@ export default {
       this.$refs.importDialog.toggle()
       this.editorNoteActionsExpanded = false
     },
+    openImportHandler: function () {
+      this.$refs.importDialog.toggle()
+    },
     ...mapServerActions(['createNote', 'createCategory']),
     ...mapClientActions(['toggleChanged', 'updateStateAndStore'])
   },
   mounted () {
     bus.$on(events.SIDE_DRAWER_CONTEXT_MENU.createCategory, this.addCategoryHandler)
+    bus.$on(events.SIDE_DRAWER_CONTEXT_MENU.createNote, this.addNoteFromEditorBar)
+    bus.$on(events.SIDE_DRAWER_CONTEXT_MENU.openImport, this.openImportHandler)
     bus.$on(events.VIEW_SHORTCUT_CALL.lockMode, this.lockModeHandler)
     bus.$on(events.VIEW_SHORTCUT_CALL.sourceMode, this.sourceModeHandler)
     bus.$on(events.GENERATE_MINDMAP, this.generateMindmapHandler)
@@ -457,6 +462,8 @@ export default {
   },
   beforeDestroy () {
     bus.$off(events.SIDE_DRAWER_CONTEXT_MENU.createCategory, this.addCategoryHandler)
+    bus.$off(events.SIDE_DRAWER_CONTEXT_MENU.createNote, this.addNoteFromEditorBar)
+    bus.$off(events.SIDE_DRAWER_CONTEXT_MENU.openImport, this.openImportHandler)
     if (this.leftInnerSplitterSaveTimer) {
       clearTimeout(this.leftInnerSplitterSaveTimer)
     }

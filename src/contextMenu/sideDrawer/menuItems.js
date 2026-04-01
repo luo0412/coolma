@@ -24,6 +24,12 @@ export const CREATE_NOTE = {
   click: contextMenu.createNote()
 }
 
+export const OPEN_IMPORT = {
+  label: 'import',
+  id: 'openImportMenuItem',
+  click: contextMenu.openImport()
+}
+
 export const EXPORT = {
   label: 'export',
   id: 'exportCategoryMenuItem',

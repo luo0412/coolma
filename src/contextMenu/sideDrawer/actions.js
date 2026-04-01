@@ -17,6 +17,10 @@ export const createNote = (menuItem, browserWindow) => {
   return packClickFunction(events.SIDE_DRAWER_CONTEXT_MENU.createNote)
 }
 
+export const openImport = (menuItem, browserWindow) => {
+  return packClickFunction(events.SIDE_DRAWER_CONTEXT_MENU.openImport)
+}
+
 export const exportCategoryAsMarkdown = (menuItem, browserWindow) => {
   return packClickFunction(events.SIDE_DRAWER_CONTEXT_MENU.exportCategory.markdown)
 }

@@ -62,7 +62,8 @@ export default {
     exportCategory: {
       markdown: 'side.drawer.context.menu.export.markdown'
     },
-    openTierRanking: 'side.drawer.context.menu.open.tier.ranking'
+    openTierRanking: 'side.drawer.context.menu.open.tier.ranking',
+    openImport: 'side.drawer.context.menu.open.import'
   },
   TAG_TREEMAP_RESIZE: 'tag.treemap.resize',
   MARK_MAP_CONTEXT_MENU: {

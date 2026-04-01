@@ -8,7 +8,7 @@ export default function (keybindings) {
     submenu: [{
       id: 'saveNote',
       label: i18n.t('save'),
-      accelerator: keybindings.getAccelerator('note.save'),
+      accelerator: '',
       click (menuItem, browserWindow) {
         actions.note(browserWindow, 'save')
       }
