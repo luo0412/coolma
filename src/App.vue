@@ -1,12 +1,12 @@
 <template>
   <div id='q-app'>
-    <a-locale-provider :locale='antdZhCN'>
+    <a-config-provider :locale='antdZhCN'>
       <router-view />
-    </a-locale-provider>
+    </a-config-provider>
   </div>
 </template>
 <script>
-import zhCN from 'ant-design-vue/lib/locale-provider/zh_CN'
+import zhCN from 'ant-design-vue/es/locale/zh_CN'
 import ErrorHandler from './ErrorHandler'
 import ScheduleHandler from './ScheduleHandler'
 import ApiHandler from 'src/ApiHandler'
