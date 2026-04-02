@@ -1,8 +1,8 @@
 export default {
-  aboutMemocast: 'About Memocast',
+  aboutMemocast: 'About Coolma',
   services: 'Services',
-  hideMemocast: 'Hide Memocast',
+  hideMemocast: 'Hide Coolma',
   hideOthers: 'Hide Others',
   showAll: 'Show All',
-  quitMemocast: 'Quit Memocast'
+  quitMemocast: 'Quit Coolma'
 }

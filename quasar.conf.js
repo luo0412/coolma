@@ -301,9 +301,20 @@ module.exports = function (/* ctx */) {
           artifactName: 'Coolma-${version}-${arch}-linux.${ext}'
         },
         files: [
-          '**/*',
-          './package.json',
-          'dist/electron/**/*'
+          'dist/**/*',
+          'package.json',
+          'public/**/*'
+        ],
+        asar: true,
+        asarUnpack: [
+          '**/node_modules/monaco-editor/**/*',
+          '**/node_modules/@antv/**/*',
+          '**/node_modules/echarts/**/*',
+          '**/node_modules/mermaid/**/*',
+          '**/node_modules/vega*/**/*',
+          '**/node_modules/markmap*/**/*',
+          '**/node_modules/katex/**/*',
+          '**/node_modules/@quasar/extras/**/*'
         ]
       },
 
