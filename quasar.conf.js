@@ -318,7 +318,6 @@ module.exports = function (/* ctx */) {
         asar: true,
         asarUnpack: [
           '**/node_modules/monaco-editor/**/*',
-          '**/node_modules/@antv/**/*',
           '**/node_modules/echarts/**/*',
           '**/node_modules/mermaid/**/*',
           '**/node_modules/vega*/**/*',
