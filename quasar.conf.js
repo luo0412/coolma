@@ -301,9 +301,9 @@ module.exports = function (/* ctx */) {
           artifactName: 'Coolma-${version}-${arch}-linux.${ext}'
         },
         files: [
-          'dist/**/*',
-          'package.json',
-          'public/**/*'
+          '**/*',
+          './package.json',
+          'dist/electron/**/*'
         ],
         asar: true,
         asarUnpack: [

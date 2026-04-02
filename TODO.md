@@ -8,9 +8,22 @@
 # 2026-05
 
 - [] 设计符文插件机制
+
+```
+https://github.com/hinesboy/mavonEditor
+```
+
 - [] 提供vdoing打包功能
 
 # 2026-04
+
+- [] 加入AI对话
+
+```
+https://github.com/OvidijusParsiunas/deep-chat
+https://gitee.com/bluexsx/box-im
+https://github.com/advanced-chat/vue-advanced-chat/tree/legacy
+```
 
 - [] 支持离线 和 同步在线功能
 - [] 切换皮肤, 哪吒红 + 悟空黄 + 白羊等12星座 + MBTI, 会有不同动画特效和背景图
