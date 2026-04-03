@@ -200,9 +200,9 @@ app.on('activate', () => {
 })
 
 app.setAboutPanelOptions({
-  applicationName: 'Coolma',
+  applicationName: 'coolma',
   copyright: 'luo0412',
-  website: 'https://github.com/luo0412/Coolma',
+  website: 'https://github.com/luo0412/coolma',
   iconPath: path.resolve('src-electron/icons', 'linux-512x512.png'),
   applicationVersion: packageJSON.version
 })

@@ -2,13 +2,13 @@
   "name": "cn.coolma.app",
   "version": "0.0.1",
   "description": "An Awesome Note Desktop Application Based On Memocast and WizNote.",
-  "productName": "Coolma",
+  "productName": "coolma",
   "author": "luo0412 <1095847440@qq.com>",
   "private": false,
   "license": "MIT",
   "repository": {
     "type": "github",
-    "url": "https://github.com/luo0412/Coolma"
+    "url": "https://github.com/luo0412/coolma"
   },
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",

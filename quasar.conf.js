@@ -251,7 +251,7 @@ module.exports = function (/* ctx */) {
 
       packager: {
         // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
-        productName: 'Coolma',
+        productName: 'coolma',
         mac: {
           target: [{
             arch: 'universal',
