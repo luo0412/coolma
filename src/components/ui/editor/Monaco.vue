@@ -16,6 +16,7 @@ import debugLogger from 'src/utils/debugLogger'
 import helper from 'src/utils/helper'
 import bus from 'components/bus'
 import events from 'src/constants/events'
+import { escape } from 'lodash'
 
 const {
   mapGetters: mapServerGetters,
@@ -212,13 +213,16 @@ export default {
       }
     },
     handleGlobalKeyDown: function (event) {
+
       // Handle Ctrl+S (Cmd+S on Mac) globally to ensure save works in Monaco
       if ((event.ctrlKey || event.metaKey) && event.key === 's') {
-        event.preventDefault()
-        event.stopPropagation()
-        // Directly trigger save without checking active state for better responsiveness
-        if (this.contentEditor) {
+        // Only prevent default and intercept if Monaco editor is active
+        if (this.active && this.contentEditor) {
+          event.preventDefault()
+          event.stopPropagation()
           this.updateNote(this.contentEditor.getValue())
+        } else {
+          bus.$emit(events.NOTE_SHORTCUT_CALL.save)
         }
       }
     },

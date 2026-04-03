@@ -47,6 +47,7 @@ const loadLanguage = initLoadLanguage(Prism)
  * @returns {Array} Filtered array (sorted by match position)
  */
 const customFilterByKey = (candidates, text, key) => {
+  if (!candidates || !text) return candidates || []
   const lower = text.toLowerCase()
   return candidates
     .filter(c => String(c[key]).toLowerCase().includes(lower))
