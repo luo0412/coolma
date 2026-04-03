@@ -8812,6 +8812,43 @@ he@1.2.x, he@^1.2.0:
   resolved "https://mirrors.cloud.tencent.com/npm/he/-/he-1.2.0.tgz"
   integrity sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==
 
+hel-html-parser@^1.1.2:
+  version "1.1.2"
+  resolved "https://mirrors.cloud.tencent.com/npm/hel-html-parser/-/hel-html-parser-1.1.2.tgz#e346a0f0bf1f9e4f9e1eb9f87de4637c0568bedf"
+  integrity sha512-fbkzG7LkkDB/GHozwom+8h8EqMs3m4xDgAxvf7KV9JvweoaVOST0asrqClDNqym/VpewivJ2EruBs6iO3zxskg==
+  dependencies:
+    hel-types "^4.3.1"
+
+hel-lib-proxy@^4.12.1:
+  version "4.12.3"
+  resolved "https://mirrors.cloud.tencent.com/npm/hel-lib-proxy/-/hel-lib-proxy-4.12.3.tgz#92bd9379d9146fb376412c22c802debec2d6fb30"
+  integrity sha512-NUuOYI/pEo8edOmq2wkBqDhVLNz3Qm9M1ZW1l3j9/m+5p4sXIrpa8dCVyZLphisQ5j6N/NB7ATCAItPiDzsX9Q==
+  dependencies:
+    hel-micro-core "^4.13.1"
+    hel-types "^4.3.10"
+
+hel-micro-core@^4.13.1:
+  version "4.13.1"
+  resolved "https://mirrors.cloud.tencent.com/npm/hel-micro-core/-/hel-micro-core-4.13.1.tgz#8cfa44b0f052a53f149d4f69bf5544a8d3195f7b"
+  integrity sha512-Ro3NG5ZcavLynK6flP3D6u+/O/jgXEBlsLe3iVu4zR7jmE+JCGSbpoXChv2vFqXV+Ut84hXitWSHx805m9xzNg==
+  dependencies:
+    hel-types "^4.3.10"
+
+hel-micro@^4.15.3:
+  version "4.15.3"
+  resolved "https://mirrors.cloud.tencent.com/npm/hel-micro/-/hel-micro-4.15.3.tgz#029e829586ec633735a035e9811fe82404ed4a15"
+  integrity sha512-PxrpX/U0cJawkeMRuAPIQaeSORDVxjQjDITTxUKyVjo23tcc8Y83Cvf2/TwGucEdm7FWR61Lm/tji3f34BxKwA==
+  dependencies:
+    hel-html-parser "^1.1.2"
+    hel-lib-proxy "^4.12.1"
+    hel-micro-core "^4.13.1"
+    hel-types "^4.3.10"
+
+hel-types@^4.3.1, hel-types@^4.3.10:
+  version "4.3.10"
+  resolved "https://mirrors.cloud.tencent.com/npm/hel-types/-/hel-types-4.3.10.tgz#0a7ab71f0f93974736e6a44ef55daf8316848c83"
+  integrity sha512-8IN3+Tn4p2Uq0Z3geoE6/Fs9Esqj6+IT8Vsm0v8/PREMwh9yq9WUgYZQUKTJjE87GspG94ioLJdsBvUxU4pJlA==
+
 hex-color-regex@^1.1.0:
   version "1.1.0"
   resolved "https://mirrors.cloud.tencent.com/npm/hex-color-regex/-/hex-color-regex-1.1.0.tgz"

@@ -144,6 +144,15 @@
         </el-dropdown-menu>
       </el-dropdown>
 
+      <!-- 聊天图标 -->
+      <div
+        class="header-icon-btn q-electron-drag--exception"
+        :title="$t('imChat')"
+        @click="handleImChatClick"
+      >
+        <i class="el-icon-chat-dot-round icon-custom" />
+      </div>
+
       <!-- 设置按钮 -->
       <div
         class="header-icon-btn q-electron-drag--exception"
@@ -188,6 +197,7 @@
     <SettingsDialog ref="settingsDialog" />
     <SearchDialog ref='searchDialog' />
     <TagDialog ref="tagDialog" />
+    <ImDrawer ref="imDrawer" />
   </q-bar>
 </template>
 
@@ -200,6 +210,7 @@ import TagDialog from 'components/ui/dialog/TagDialog'
 import bus from 'components/bus'
 import events from 'src/constants/events'
 import SearchDialog from 'components/ui/dialog/SearchDialog'
+import ImDrawer from 'components/ui/ImDrawer'
 import { ipcRenderer } from 'electron'
 
 const {
@@ -253,7 +264,7 @@ export default {
       return category ? category.label : ''
     }
   },
-  components: { SearchDialog, TagDialog, SettingsDialog, LoginDialog },
+  components: { SearchDialog, TagDialog, SettingsDialog, LoginDialog, ImDrawer },
   data () {
     return {
       isMaximized: false,
@@ -295,6 +306,10 @@ export default {
     handleSettingsClick () {
       this.handleHighlight('settingsHighlight')
       this.$refs.settingsDialog.toggle()
+    },
+
+    handleImChatClick () {
+      this.$refs.imDrawer.toggle()
     },
 
     minimize () {

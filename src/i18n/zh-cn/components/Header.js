@@ -15,5 +15,6 @@ export default {
   calendarView: '日历',
   skin: '换肤',
   ppt: 'PPT',
-  link: '链接'
+  link: '链接',
+  imChat: '聊天'
 }
