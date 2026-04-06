@@ -1,8 +1,18 @@
 # TODO
 
+# 2026-07
+
+- 数学代码交互动画
+
 # 2026-06
 
 - [] reveal.js的PPT查看模式
+
+```
+reveal.js
+Marp
+```
+
 - [] 快速创建 挖空模板
 
 # 2026-05
@@ -22,6 +32,7 @@ https://github.com/hinesboy/mavonEditor
 ```
 https://gitee.com/bluexsx/box-im
 https://github.com/OvidijusParsiunas/deep-chat
+https://github.com/mattmezza/vue-beautiful-chat
 https://github.com/advanced-chat/vue-advanced-chat/tree/legacy
 ```
 
