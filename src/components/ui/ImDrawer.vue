@@ -1,7 +1,6 @@
 <template>
   <q-drawer
     ref="drawer"
-    :value="false"
     :width="$q.screen.width * 0.8"
     side="right"
     overlay
@@ -39,6 +38,7 @@
 
 <script>
 import WujieVue from 'wujie-vue2'
+import { getAppPath } from 'src/ApiInvoker'
 
 export default {
   name: 'ImDrawer',
@@ -47,7 +47,8 @@ export default {
   },
   data () {
     return {
-      visible: false
+      visible: false,
+      appBasePath: ''
     }
   },
   computed: {
@@ -55,7 +56,15 @@ export default {
       // if (process.env.MODE === 'electron') {
       //   return 'http://localhost:8080/box-im/'
       // }
+      if (this.appBasePath) {
+        return `file://${this.appBasePath}/box-im/`
+      }
       return '/box-im/'
+      // return 'https://www.boxim.online'
+      // return 'http://82.156.212.243/box-im/'
+      // return 'file:///box-im/index.html'
+      // return 'public://box-im/'
+
     },
     wujieProps () {
       return {
@@ -64,7 +73,18 @@ export default {
     }
   },
   methods: {
+    async initAppPath () {
+      try {
+        const basePath = await getAppPath()
+        this.appBasePath = basePath
+      } catch (err) {
+        console.error('Failed to get app path:', err)
+      }
+    },
     show () {
+      if (!this.appBasePath) {
+        this.initAppPath()
+      }
       this.visible = true
       this.$nextTick(() => {
         if (this.$refs.drawer) {

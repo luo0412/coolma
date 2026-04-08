@@ -17,5 +17,6 @@ export default {
   refreshThemeFolder: 'refresh-theme-folder',
   getLocalFileData: 'get-local-file-data',
   saveUploadedImage: 'save-uploaded-image',
-  popContextMenu: 'pop-context-menu'
+  popContextMenu: 'pop-context-menu',
+  getAppPath: 'get-app-path'
 }

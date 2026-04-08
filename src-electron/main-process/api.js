@@ -281,5 +281,9 @@ export default {
       console.log(log.transports.file.resolvePath())
       shell.showItemInFolder(log.transports.file.resolvePath())
     }).catch(err => throw err)
+
+    handleApi('get-app-path', async (e) => {
+      return app.getAppPath()
+    }).catch(err => throw err)
   }
 }

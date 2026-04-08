@@ -106,6 +106,10 @@ async function saveUploadedImage (buffer, kbGuid, docGuid, name) {
   return ipcRenderer.invoke(channels.saveUploadedImage, { buffer, kbGuid, docGuid, name })
 }
 
+async function getAppPath () {
+  return ipcRenderer.invoke(channels.getAppPath)
+}
+
 export {
   exportMarkdownFile,
   exportPng,
@@ -125,5 +129,6 @@ export {
   refreshThemeFolder,
   getLocalFileData,
   saveUploadedImage,
-  popContextMenu
+  popContextMenu,
+  getAppPath
 }
