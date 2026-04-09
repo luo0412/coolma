@@ -13,10 +13,10 @@
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",
     "dev": "quasar dev -m electron -t mat",
-    "build-develop": "set NODE_OPTIONS=--max-old-space-size=8192 && quasar build -m electron -d",
-    "build-publish": "set NODE_OPTIONS=--max-old-space-size=8192 && quasar build -m electron -P always",
-    "build-all": "set NODE_OPTIONS=--max-old-space-size=8192 && quasar build -m electron -T all -P",
-    "build": "set NODE_OPTIONS=--max-old-space-size=8192 && quasar build -m electron"
+    "build-develop": "quasar build -m electron -d",
+    "build-publish": "quasar build -m electron -P always",
+    "build-all": "quasar build -m electron -T all -P",
+    "build": "quasar build -m electron"
   },
   "dependencies": {
     "@altairwei/wiz-markdown": "^1.0.13",

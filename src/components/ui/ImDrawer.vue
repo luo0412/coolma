@@ -25,8 +25,10 @@
       <!-- Wujie micro-frontend container -->
       <div class="im-wujie-wrapper" style="width: 100%; height: 100%;">
         <WujieVue
+          key="imUrl"
           v-if="visible"
           name="box-im"
+          style="width: 100%; height: 100%;"
           :url="imUrl"
           :sync="false"
           :props="wujieProps"
@@ -56,15 +58,9 @@ export default {
       // if (process.env.MODE === 'electron') {
       //   return 'http://localhost:8080/box-im/'
       // }
-      if (this.appBasePath) {
-        return `file://${this.appBasePath}/box-im/`
-      }
-      return '/box-im/'
+      // return '/box-im/'
       // return 'https://www.boxim.online'
-      // return 'http://82.156.212.243/box-im/'
-      // return 'file:///box-im/index.html'
-      // return 'public://box-im/'
-
+      return 'https://luo0412.github.io/box-im/#/'
     },
     wujieProps () {
       return {
@@ -73,18 +69,18 @@ export default {
     }
   },
   methods: {
-    async initAppPath () {
-      try {
-        const basePath = await getAppPath()
-        this.appBasePath = basePath
-      } catch (err) {
-        console.error('Failed to get app path:', err)
-      }
-    },
+    // async initAppPath () {
+    //   try {
+    //     const basePath = await getAppPath()
+    //     this.appBasePath = basePath
+    //   } catch (err) {
+    //     console.error('Failed to get app path:', err)
+    //   }
+    // },
     show () {
-      if (!this.appBasePath) {
-        this.initAppPath()
-      }
+      // if (!this.appBasePath) {
+      //   this.initAppPath()
+      // }
       this.visible = true
       this.$nextTick(() => {
         if (this.$refs.drawer) {

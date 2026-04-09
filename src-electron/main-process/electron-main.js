@@ -88,6 +88,7 @@ function createWindow () {
       contextIsolation: false,
       nodeIntegrationInWorker: process.env.QUASAR_NODE_INTEGRATION,
       webSecurity: false,
+      allowRunningInsecureContent: true,
       experimentalFeatures: false
       // Note: enableRemoteModule has been removed since Electron 28
       // @electron/remote now handles this automatically

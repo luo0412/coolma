@@ -1,12 +1,13 @@
-const fs = require('fs')
+// const fs = require('fs')
 const TerserPlugin = require('terser-webpack-plugin');
 const { defineConfig } = require('@vue/cli-service')
 const isProd = process.env.NODE_ENV === 'production'
 
 module.exports = defineConfig({
   lintOnSave: !isProd,
-  outputDir: '../public/box-im',
-  publicPath: isProd ? '/box-im/' : '/',
+  // outputDir: '../public/box-im',
+  // publicPath: isProd ? '/box-im/' : '/',
+  publicPath: isProd ? 'https://luo0412.github.io/box-im/' : '/',
   productionSourceMap: false,
 	devServer: {
     port: 18080,
