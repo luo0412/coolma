@@ -315,6 +315,7 @@ module.exports = function (/* ctx */) {
           './package.json',
           'dist/electron/**/*',
           '!box-im-wujie/**/*',
+          '!public/box-im/**/*',
           // '!node_modules/**/*',
           '!dist/**/*',
           '!.cursor/**/*',
