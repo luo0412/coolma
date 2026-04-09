@@ -27,7 +27,9 @@ https://github.com/hinesboy/mavonEditor
 
 # 2026-04
 
-- [x] 加入AI对话
+- 可配置 AI Provider
+
+- [x] 加入对话
 
 ```
 https://gitee.com/bluexsx/box-im
@@ -39,6 +41,11 @@ https://github.com/advanced-chat/vue-advanced-chat/tree/legacy
 - [] 支持离线 和 同步在线功能
 - [] 切换皮肤, 哪吒红 + 悟空黄 + 白羊等12星座 + MBTI, 会有不同动画特效和背景图
 - [] 优化打包体积
+- [] 引入matter-js 和 jsxgraph
+
+```
+@ps 之前引入过，但是引起了打包异常...
+```
 
 # 2026-03
 
