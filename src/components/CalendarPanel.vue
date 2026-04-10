@@ -39,6 +39,7 @@
               :value="value"
               size="small"
               format="YYYY年M月"
+              class="calendar-month-picker"
               :get-calendar-container="getMonthPickerPopupContainer"
               @change="(m) => onMonthPickerChange(m, onChange, onTypeChange, type)"
             />
@@ -166,6 +167,11 @@ export default {
 
 .calendar-date-basis-select {
   min-width: 104px;
+  max-width: 120px;
+}
+
+.calendar-month-picker {
+  max-width: 100px;
 }
 
 .calendar-note-dot {

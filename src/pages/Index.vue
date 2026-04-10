@@ -198,6 +198,30 @@
                 v-show='!editorNoteActionsExpanded && dataLoaded && !isOutlineShow'
                 v-ripple
               />
+              <q-btn
+                icon='share'
+                class='fab-icon cursor-pointer material-icons-round'
+                dense
+                flat
+                round
+                size='md'
+                color='#26A69A'
+                v-show='!editorNoteActionsExpanded && dataLoaded && !isOutlineShow'
+                v-ripple
+                :title="$t('ppt')"
+              />
+              <q-btn
+                icon='link'
+                class='fab-icon cursor-pointer material-icons-round'
+                dense
+                flat
+                round
+                size='md'
+                color='#26A69A'
+                v-show='!editorNoteActionsExpanded && dataLoaded && !isOutlineShow'
+                v-ripple
+                :title="$t('link')"
+              />
               <ImportDialog ref='importDialog' />
             </div>
           </div>

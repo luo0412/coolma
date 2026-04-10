@@ -187,6 +187,8 @@
 </template>
 
 <script>
+import html2canvas from 'html2canvas'
+
 const DB_NAME = 'TierRankingDB'
 const DB_VERSION = 1
 const STORE_NAME = 'tierRankingState'
@@ -482,10 +484,11 @@ export default {
     },
 
     onImageDragEnd () {
+      // 仅重置拖拽高亮状态，不重置 draggingImage
+      // 状态会在 drop 事件或取消操作中重置
       this.tierDragOverIndex = -1
       this.deleteZoneDragOver = false
-      this.draggingImage = null
-      this.draggingImageTierIndex = -1
+      this.galleryDragOver = false
     },
 
     onTierDragOver (tierIndex, e) {
@@ -520,6 +523,9 @@ export default {
     onTierContentDrop (tierIndex) {
       if (!this.draggingImage) return
       this.moveImageToTier(tierIndex)
+      this.tierDragOverIndex = -1
+      this.draggingImage = null
+      this.draggingImageTierIndex = -1
     },
 
     moveImageToTier (tierIndex) {
@@ -780,11 +786,6 @@ export default {
       const container = document.querySelector('.ranking-container')
       if (!container) return
       try {
-        const html2canvas = window.html2canvas
-        if (!html2canvas) {
-          this.$q.notify({ message: '截图库未加载', color: 'negative' })
-          return
-        }
         const canvas = await html2canvas(container, {
           scale: 2,
           useCORS: true,
@@ -923,13 +924,12 @@ export default {
   position: relative;
   cursor: pointer;
   box-sizing: border-box;
-  padding: 6px 52px 6px 6px;
+  padding: 6px;
 }
 
 .tier-name {
   outline: none;
   display: block;
-  width: 100%;
   font-weight: 900;
   line-height: 1.25;
   white-space: normal;

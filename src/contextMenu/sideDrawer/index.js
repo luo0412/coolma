@@ -25,7 +25,7 @@ export const showContextMenu = (event, isCurrentCategory, category) => {
     EXPORT.enabled = false
     DELETE.enabled = false
   }
-  const ITEMS = [CREATE_CATEGORY, CREATE_NOTE, OPEN_IMPORT, SEPARATOR, EXPORT, SEPARATOR, DELETE]
+  const ITEMS = [CREATE_CATEGORY, CREATE_NOTE, SEPARATOR, OPEN_TIER_RANKING, SEPARATOR, OPEN_IMPORT, EXPORT, SEPARATOR, DELETE]
 
   const MENU_ITEM = ITEMS.map(item => {
     if (item.type === 'separator') return item

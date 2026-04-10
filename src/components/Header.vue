@@ -112,22 +112,6 @@
         <a-icon type="layout" class="icon-custom" />
       </div>
 
-      <!-- PPT文件图标 -->
-      <div
-        class="header-icon-btn q-electron-drag--exception"
-        :title="$t('ppt')"
-      >
-        <a-icon type="file-ppt" class="icon-custom" />
-      </div>
-
-      <!-- 链接图标 -->
-      <div
-        class="header-icon-btn q-electron-drag--exception"
-        :title="$t('link')"
-      >
-        <a-icon type="link" class="icon-custom" />
-      </div>
-
       <!-- 换肤按钮 (Element UI Dropdown) -->
       <el-dropdown trigger="click" @command="handleSkinCommand">
         <div
