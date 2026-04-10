@@ -25,6 +25,23 @@
 
     <!-- 左侧图标 -->
     <div class="header-left-icons">
+      <!-- 笔记方法下拉框 -->
+      <el-dropdown trigger="click" @command="handleNoteMethodChange" popper-class="note-method-popper">
+        <span class="header-icon-btn q-electron-drag--exception note-method-btn" :class="{ 'is-active': noteMethod }">
+          <i class="el-icon-notebook-2 icon-custom" />
+          {{ currentNoteMethodLabel }}
+        </span>
+        <el-dropdown-menu slot="dropdown">
+          <el-dropdown-item
+            v-for="opt in noteMethodOptions"
+            :key="opt.value"
+            :command="opt.value"
+          >
+            {{ opt.label }}
+          </el-dropdown-item>
+        </el-dropdown-menu>
+      </el-dropdown>
+
       <!-- 文件夹图标 -->
       <div
         class="header-icon-btn q-electron-drag--exception"
@@ -224,6 +241,10 @@ export default {
     darkMode: function () {
       return this.$q.dark.isActive
     },
+    currentNoteMethodLabel () {
+      const opt = this.noteMethodOptions.find(o => o.value === this.noteMethod)
+      return opt ? opt.label : ''
+    },
     title: function () {
       if (this.currentNote.info) {
         let { title } = this.currentNote.info
@@ -253,7 +274,14 @@ export default {
     return {
       isMaximized: false,
       searchHighlight: false,
-      settingsHighlight: false
+      settingsHighlight: false,
+      noteMethod: 'notesSixDaoLun',
+      noteMethodOptions: [
+        { label: '笔记六道论', value: 'notesSixDaoLun' },
+        { label: '漏斗式阅读', value: 'funnelReading' },
+        { label: '三层笔记法', value: 'threeLayerNotes' },
+        { label: '子弹笔记法', value: 'bulletJournal' }
+      ]
     }
   },
   methods: {
@@ -272,6 +300,10 @@ export default {
       setTimeout(() => {
         this[type] = false
       }, 1200)
+    },
+
+    handleNoteMethodChange (value) {
+      this.noteMethod = value
     },
 
     handleSearchClick () {
@@ -314,22 +346,20 @@ export default {
 
     toggleCategoryDrawer () {
       if (!this.isLogin) return
-      const wasCalendar = this.sidebarTreeType === 'calendar'
       this.toggleChanged({ key: 'sidebarTreeType', value: 'category' })
       if (!this.noteListVisible || this.paneLayoutMode !== 0) {
         this.expandFullPaneLayout()
       }
-      if (wasCalendar) this.getCategoryNotes()
+      this.getCategoryNotes()
     },
 
     toggleTagDrawer () {
       if (!this.isLogin) return
-      const wasCalendar = this.sidebarTreeType === 'calendar'
       this.toggleChanged({ key: 'sidebarTreeType', value: 'tag' })
       if (!this.noteListVisible || this.paneLayoutMode !== 0) {
         this.expandFullPaneLayout()
       }
-      if (wasCalendar) this.getCategoryNotes()
+      this.getCategoryNotes()
     },
 
     toggleCalendarDrawer () {
@@ -423,6 +453,51 @@ export default {
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
+}
+
+.note-method-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--themeColor);
+  flex-shrink: 0;
+}
+
+.note-method-btn .icon-custom {
+  margin-right: 4px;
+}
+
+.note-method-btn:hover {
+  background-color: var(--floatHoverColor);
+}
+
+.note-method-btn.is-active {
+  background-color: var(--themeColor10);
+  border: 1px solid var(--themeColor30);
+  box-shadow: 0 2px 8px var(--themeColor20);
+}
+
+.el-dropdown-menu .el-dropdown-menu-item.is-active {
+  background-color: var(--themeColor10);
+  color: var(--themeColor);
+}
+
+.note-method-popper {
+  z-index: 9999 !important;
+}
+
+.note-method-popper .el-dropdown-menu {
+  width: auto;
+  min-width: 100%;
 }
 
 .header-category-name {
@@ -443,8 +518,8 @@ export default {
 }
 
 .header-icon-btn {
-  width: 36px;
   height: 36px;
+  padding: 0 10px;
   display: flex;
   align-items: center;
   justify-content: center;
