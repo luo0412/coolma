@@ -16,5 +16,6 @@ export default {
   skin: 'Skin',
   ppt: 'PPT',
   link: 'Link',
-  imChat: 'Chat'
+  imChat: 'Chat',
+  noteMethod: 'Note Method'
 }

@@ -109,7 +109,7 @@
         :title="$t('switchView')"
         @click="switchViewHandler"
       >
-        <a-icon type="layout" class="icon-custom" />
+        <a-icon type="layout" class="icon-custom layout-mirror" />
       </div>
 
       <!-- 换肤按钮 (Element UI Dropdown) -->
@@ -408,6 +408,11 @@ export default {
   margin-left: 7px;
   letter-spacing: 0.3px;
   font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .close-button:hover {
@@ -484,6 +489,10 @@ export default {
 .header-icon-btn.is-active .icon-custom {
   color: var(--themeColor);
   filter: drop-shadow(0 1px 2px var(--themeColor40));
+}
+
+.layout-mirror {
+  transform: scaleX(-1);
 }
 
 .header-icon-btn.is-highlight {

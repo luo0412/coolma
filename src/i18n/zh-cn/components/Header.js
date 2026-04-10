@@ -16,5 +16,6 @@ export default {
   skin: '换肤',
   ppt: 'PPT',
   link: '链接',
-  imChat: '聊天'
+  imChat: '聊天',
+  noteMethod: '笔记方法'
 }
