@@ -1,6 +1,9 @@
 export default {
   modifiedAt: 'Modified At {date}',
-  discardNote: 'Discard Note',
-  discardNoteHint: 'Do you want to discard note changes without saving it ?',
-  ok: 'OK'
+  discardNote: 'Save Note Changes',
+  discardNoteHint: 'Do you want to save note changes and switch notes?',
+  ok: 'OK',
+  saveAndSync: 'Save & Sync',
+  saveOnly: 'Save Only',
+  cancel: 'Cancel'
 }

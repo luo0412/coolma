@@ -1,5 +1,6 @@
 import types from 'src/store/server/types'
 import api from 'src/utils/api'
+import DatabaseClient from 'src/utils/DatabaseClient'
 
 /** 日历列表/打点用时间戳；创建日优先 dataCreated（与 Wiz 列表字段一致），缺省回退修改日 */
 function getCalendarNoteTimestamp (note, basis) {
@@ -380,6 +381,7 @@ export default {
   },
   /**
    * 获取笔记内容
+   * 优先从 SQLite 读取本地最新版本（如果有未同步的修改）
    * @param commit
    * @param state
    * @param payload
@@ -393,7 +395,37 @@ export default {
     const { kbGuid } = state
     const { docGuid } = payload
     console.time('GetContent')
-    const result = await _getContent(kbGuid, docGuid)
+
+    // 始终先查 SQLite，有就直接用（本地永远优先）
+    let result
+    try {
+      const localNote = await DatabaseClient.getNoteByDocGuid(docGuid)
+      console.log('[getNoteContent] SQLite lookup:', docGuid, localNote ? `found id=${localNote.id} content_len=${(localNote.content || '').length}` : 'NOT FOUND')
+      if (localNote && localNote.content) {
+        console.log('[getNoteContent] Using local version from SQLite:', docGuid)
+        result = {
+          _isRawMarkdown: true,  // 标记：原始 markdown，getter 不要做任何转换处理
+          info: {
+            docGuid: localNote.doc_guid || docGuid,
+            kbGuid: kbGuid,
+            title: localNote.title,
+            category: localNote.category || '/',
+            dataCreated: localNote.data_created,
+            dataModified: localNote.data_modified || localNote.local_modified
+          },
+          html: localNote.content,
+          resources: []
+        }
+      } else {
+        // SQLite 里没有，才请求云端
+        console.log('[getNoteContent] Not in SQLite, fetching from cloud:', docGuid)
+        result = await _getContent(kbGuid, docGuid)
+      }
+    } catch (error) {
+      console.warn('[getNoteContent] SQLite error, fallback to server:', error)
+      result = await _getContent(kbGuid, docGuid)
+    }
+
     console.timeEnd('GetContent')
     Loading.hide()
     commit(types.UPDATE_CURRENT_NOTE_LOADING_STATE, false)

@@ -24,6 +24,10 @@ const {
   mapActions: mapServerActions,
   mapState: mapServerState
 } = createNamespacedHelpers('server')
+const {
+  mapActions: mapOfflineActions,
+  mapState: mapOfflineState
+} = createNamespacedHelpers('offline')
 export default {
   name: 'App',
   data () {
@@ -33,7 +37,8 @@ export default {
     }
   },
   computed: {
-    ...mapClientState(['autoSaveGap'])
+    ...mapClientState(['autoSaveGap']),
+    ...mapOfflineState(['isInitialized'])
   },
   async mounted () {
     RegisterErrorHandler()
@@ -43,6 +48,7 @@ export default {
     checkUpdate()
     this.initClientStore().then()
     this.initServerStore().then()
+    this.initOfflineStore().then()
     this.setupAutoSaveInterval(this.autoSaveGap)
   },
   methods: {
@@ -58,7 +64,8 @@ export default {
     },
     ...mapClientActions(['initClientStore']),
     ...mapServerActions(['initServerStore', 'reLogin']),
-    ...mapServerState(['isLogin'])
+    ...mapServerState(['isLogin']),
+    ...mapOfflineActions(['initOfflineStore'])
   },
   watch: {
     autoSaveGap: function (val) {

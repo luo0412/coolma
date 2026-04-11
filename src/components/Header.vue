@@ -119,6 +119,18 @@
 
     <!-- 右侧图标组 -->
     <div class="header-right-icons">
+      <!-- 全局同步按钮 -->
+      <div
+        class="header-icon-btn q-electron-drag--exception sync-btn"
+        :class="{ 'is-syncing': isSyncing, 'has-pending': pendingCount > 0 }"
+        :title="syncTooltip"
+        @click="handleSyncClick"
+      >
+        <i v-if="isSyncing" class="el-icon-loading icon-custom sync-icon" />
+        <i v-else class="el-icon-refresh icon-custom sync-icon" />
+        <span v-if="pendingCount > 0" class="sync-badge">{{ pendingCount > 99 ? '99+' : pendingCount }}</span>
+      </div>
+
       <!-- 视图切换按钮 -->
       <div
         class="header-icon-btn q-electron-drag--exception"
@@ -225,6 +237,12 @@ const {
   mapActions: mapClientActions
 } = createNamespacedHelpers('client')
 
+const {
+  mapState: mapOfflineState,
+  mapActions: mapOfflineActions,
+  mapGetters: mapOfflineGetters
+} = createNamespacedHelpers('offline')
+
 export default {
   name: 'Header',
   computed: {
@@ -238,6 +256,24 @@ export default {
       'enablePreviewEditor',
       'sidebarTreeType'
     ]),
+    ...mapOfflineState(['syncStatus']),
+
+    // 同步状态
+    isSyncing() {
+      return this.syncStatus?.isSyncing || false
+    },
+    pendingCount() {
+      return this.syncStatus?.pending || 0
+    },
+    syncTooltip() {
+      if (this.isSyncing) {
+        return this.$t('syncing')
+      }
+      if (this.pendingCount > 0) {
+        return this.$t('pendingSync', { count: this.pendingCount })
+      }
+      return this.$t('clickToSync')
+    },
     darkMode: function () {
       return this.$q.dark.isActive
     },
@@ -404,8 +440,52 @@ export default {
     },
 
     ...mapServerActions(['logout', 'getCategoryNotes']),
-    ...mapClientActions(['toggleChanged', 'cyclePaneLayout', 'expandFullPaneLayout'])
+    ...mapClientActions(['toggleChanged', 'cyclePaneLayout', 'expandFullPaneLayout']),
+    ...mapOfflineActions(['sync']),
+
+    // 同步按钮点击处理
+    async handleSyncClick() {
+      if (this.isSyncing) {
+        return // 正在同步中，不重复触发
+      }
+
+      if (!this.isLogin) {
+        this.$q.notify({
+          message: this.$t('offlineMode'),
+          type: 'info',
+          position: 'top'
+        })
+        return
+      }
+
+      try {
+        const result = await this.sync()
+        if (result.success) {
+          const { stats = {} } = result
+          this.$q.notify({
+            message: this.$t('syncComplete'),
+            type: 'positive',
+            position: 'top',
+            caption: `↑${stats.pushed || 0} ↓${stats.pulled || 0}`
+          })
+        } else {
+          this.$q.notify({
+            message: this.$t('syncFailed'),
+            type: 'negative',
+            position: 'top'
+          })
+        }
+      } catch (error) {
+        console.error('Sync failed:', error)
+        this.$q.notify({
+          message: this.$t('syncFailed'),
+          type: 'negative',
+          position: 'top'
+        })
+      }
+    }
   },
+
   mounted () {
     this.updateMaximizeIcon()
     ipcRenderer.on('window-maximized', (_, val) => { this.isMaximized = val })
@@ -655,5 +735,44 @@ export default {
 
 .el-dropdown-menu__item i {
   margin-right: 8px;
+}
+
+/* 同步按钮样式 */
+.sync-btn {
+  position: relative;
+}
+
+.sync-btn.has-pending .sync-icon {
+  color: var(--themeColor);
+}
+
+.sync-btn.is-syncing .sync-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.sync-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 16px;
+  text-align: center;
+  color: #fff;
+  background-color: #f56c6c;
+  border-radius: 8px;
+  transform: translate(25%, -25%);
 }
 </style>

@@ -23,6 +23,7 @@
 import _ from 'lodash'
 import { createNamespacedHelpers } from 'vuex'
 import helper from 'src/utils/helper'
+import DatabaseClient from 'src/utils/DatabaseClient'
 
 const {
   mapActions: mapServerActions,
@@ -136,19 +137,114 @@ export default {
   methods: {
     noteItemClickHandler: function () {
       if (this.noteState !== 'default') {
-        this.$q.dialog({
-          title: this.$t('discardNote'),
-          cancel: {
-            label: this.$t('cancel')
-          },
-          ok: {
-            label: this.$t('ok')
-          },
-          message: this.$t('discardNoteHint')
-        }).onOk(() => this.getNoteContent({ docGuid: this.docGuid }))
+        // 有未保存的修改：先存 SQLite（原样），再切笔记，后台同步云端
+        this.saveToSQLite().then(() => {
+          console.time('NoteLoadTime')
+          this.getNoteContent({ docGuid: this.docGuid }).then(() => console.timeEnd('NoteLoadTime'))
+        })
+        // 后台异步同步云端（不等待）
+        this.asyncSyncToCloud()
       } else {
         console.time('NoteLoadTime')
         this.getNoteContent({ docGuid: this.docGuid }).then(() => console.timeEnd('NoteLoadTime'))
+      }
+    },
+    // 获取当前编辑器的 markdown 内容
+    getCurrentMarkdown () {
+      // 优先尝试通过 $root 找到 Index 页面组件
+      const findIndexPage = (root) => {
+        const queue = [...root.$children]
+        while (queue.length) {
+          const child = queue.shift()
+          if (child.$refs?.muya && typeof child.$refs.muya.getValue === 'function') {
+            return child
+          }
+          if (child.$refs?.monaco && typeof child.$refs.monaco.getValue === 'function') {
+            return child
+          }
+          queue.push(...child.$children)
+        }
+        return null
+      }
+
+      const page = findIndexPage(this.$root)
+      if (!page) {
+        console.warn('[NoteItem] Cannot find editor page')
+        return ''
+      }
+
+      // Muya 编辑器
+      const muya = page.$refs.muya
+      if (muya && typeof muya.getValue === 'function') {
+        return muya.getValue()
+      }
+      // Monaco 编辑器
+      const monaco = page.$refs.monaco
+      if (monaco && typeof monaco.getValue === 'function') {
+        return monaco.getValue()
+      }
+      return ''
+    },
+    // 保存当前笔记到本地 SQLite（切换时调用，保存编辑器最新内容）
+    async saveToSQLite () {
+      try {
+        const state = this.$store.state.server
+        const currentNote = state.currentNote
+        const docGuid = currentNote?.info?.docGuid
+        const info = currentNote?.info
+        console.log('[NoteItem] saveToSQLite called, docGuid:', docGuid, 'hasInfo:', !!info)
+        if (!docGuid || !info) {
+          console.warn('[NoteItem] saveToSQLite skipped: no docGuid or info')
+          return false
+        }
+
+        const markdown = this.getCurrentMarkdown()
+        console.log('[NoteItem] getCurrentMarkdown returned length:', markdown?.length || 0)
+        if (!markdown) {
+          console.warn('[NoteItem] saveToSQLite skipped: empty markdown')
+          return false
+        }
+
+        const localNote = await DatabaseClient.getNoteByDocGuid(docGuid)
+        console.log('[NoteItem] SQLite lookup result:', localNote ? `id=${localNote.id}` : 'null')
+        if (localNote) {
+          await DatabaseClient.updateNote(localNote.id, {
+            content: markdown,
+            title: info.title,
+            category: info.category || '/',
+            sync_status: 'pending_upload'
+          })
+          console.log('[NoteItem] SQLite updated:', docGuid, 'content length:', markdown.length)
+        } else {
+          await DatabaseClient.createNote({
+            doc_guid: docGuid,
+            title: info.title,
+            content: markdown,
+            category: info.category || '/',
+            sync_status: 'pending_upload'
+          })
+          console.log('[NoteItem] SQLite created:', docGuid, 'content length:', markdown.length)
+        }
+        return true
+      } catch (err) {
+        console.error('[NoteItem] saveToSQLite failed:', err)
+        return false
+      }
+    },
+    // 保存当前笔记（云端）
+    async saveCurrentNote (markdown) {
+      if (markdown && typeof this.$store.dispatch === 'function') {
+        await this.$store.dispatch('server/updateNote', markdown)
+      }
+    },
+    // 后台异步同步到云端（不等待）
+    async asyncSyncToCloud () {
+      try {
+        if (this.$store && this.$store.hasModule('offline')) {
+          this.$store.dispatch('offline/sync')
+        }
+      } catch (error) {
+        console.error('[NoteItem] Async sync failed:', error)
       }
     },
     ...mapServerActions(['getNoteContent', 'updateNoteInfo'])

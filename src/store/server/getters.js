@@ -52,6 +52,12 @@ export default {
   },
   currentNote: ({ currentNote }) => {
     if (helper.isNullOrEmpty(currentNote) || Object.keys(currentNote).length === 0) return ''
+
+    // 本地 SQLite 来的原始 markdown，直接返回不做任何处理
+    if (currentNote._isRawMarkdown) {
+      return currentNote.html || ''
+    }
+
     const isHtml = !_.endsWith(currentNote.info.title, '.md')
 
     const {

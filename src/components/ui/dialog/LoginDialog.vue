@@ -101,6 +101,13 @@
               @click='signUpHandler'
               color='green'
             />
+            <q-btn
+              class='fab-btn q-mt-sm'
+              :label="$t('skipLogin')"
+              @click='skipLogin'
+              flat
+              color='grey'
+            />
           </div>
         </q-form>
       </q-card-section>
@@ -120,6 +127,9 @@ const {
   mapState: mapClientState,
   mapActions: mapClientActions
 } = createNamespacedHelpers('client')
+const {
+  mapActions: mapOfflineActions
+} = createNamespacedHelpers('offline')
 export default {
   name: 'LoginDialog',
   components: { Loading },
@@ -157,6 +167,11 @@ export default {
       const { ipcRenderer } = require('electron')
       ipcRenderer.send('window-close')
     },
+    skipLogin: function () {
+      // 跳过登录，初始化本地数据库，以离线模式运行
+      this.$emit('skip-login')
+      this.toggle()
+    },
     signUpHandler: function () {
       this.$q.electron.shell.openExternal(
         `${!(helper.isNullOrEmpty(this.selfHostServer) || !this.enableSelfHostServer) ? this.selfHostServer.replace(/\/+$/, '') : 'https://wiz.cn'}/signup`
@@ -169,7 +184,8 @@ export default {
       return this.$refs.dialog.show()
     },
     ...mapServerActions(['login', 'getCategoryNotes']),
-    ...mapClientActions(['toggleChanged'])
+    ...mapClientActions(['toggleChanged']),
+    ...mapOfflineActions(['initOfflineStore'])
   },
   created () {
     const [userId, password, url] = ClientFileStorage.getItemsFromStore([

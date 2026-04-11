@@ -22,6 +22,9 @@ export default {
     if (!helper.isNullOrEmpty(token)) {
       ServerFileStorage.saveToLocalStorage('token', token)
     }
+    if (!helper.isNullOrEmpty(kbGuid)) {
+      localStorage.setItem('kbGuid', kbGuid)
+    }
     const data = { kbGuid, kbServer, lang, email, displayName, userGuid, isLogin }
     Object.assign(state, data)
     // state.currentNote = {}

@@ -56,7 +56,7 @@ module.exports = function (/* ctx */) {
       // Add dependencies for transpiling with Babel (Array of string/regex)
       // (from node_modules, which are by default not transpiled).
       // Applies only if "transpile" is set to true.
-      transpileDependencies: [/vega.*/, /@quasar.*/, /quill/, 'htmlparser2', 'parse5', 'cheerio', /monaco.*/],
+      transpileDependencies: [/vega.*/, /@quasar.*/, /quill/, 'htmlparser2', 'parse5', 'cheerio', /monaco.*/, 'sql.js'],
 
       // rtl: false, // https://quasar.dev/options/rtl-support
       // preloadChunks: true,
@@ -348,8 +348,21 @@ module.exports = function (/* ctx */) {
           'electron-log': 'commonjs electron-log',
           'electron-unhandled': 'commonjs electron-unhandled',
           'electron-updater': 'commonjs electron-updater',
-          'electron-window-state': 'commonjs electron-window-state'
+          'electron-window-state': 'commonjs electron-window-state',
+          'sql.js': 'commonjs sql.js'
         }
+
+        // 使用 babel-loader 转译 sql.js 的 wasm 文件
+        cfg.module.rules.push({
+          test: /\.js$/,
+          include: /node_modules\/sql\.js/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              presets: [['@babel/preset-env', { targets: { node: 'current' } }]]
+            }
+          }
+        })
       }
     }
   }

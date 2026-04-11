@@ -17,5 +17,30 @@ export default {
   'word:': 'Words: {word}',
   'paragraph:': 'Paragraph: {paragraph}',
   'character:': 'Characters: {character}',
-  copyContent: 'Copy Content'
+  copyContent: 'Copy Content',
+
+  // Sync related
+  syncConflict: 'Sync Conflict',
+  conflictNote: 'Local: {localTime} | Server: {serverTime}',
+  localVersion: 'Local Version',
+  serverVersion: 'Server Version',
+  keepLocal: 'Keep Local',
+  keepServer: 'Keep Server',
+  modifiedAt: 'Modified at {time}',
+  manualMerge: 'Manual Merge',
+  mergeContent: 'Merged Content',
+  enterMergedContent: 'Enter merged content...',
+  resolve: 'Resolve',
+  skipForNow: 'Skip for Now',
+  skipLogin: 'Skip Login',
+  localNotes: 'Local Notes',
+  offlineMode: 'Offline Mode',
+  bindWizNote: 'Bind WizNote Account',
+  sync: 'Sync',
+  syncing: 'Syncing...',
+  syncComplete: 'Sync Complete',
+  syncFailed: 'Sync Failed',
+  pendingSync: '{count} pending',
+  noPendingSync: 'No pending sync',
+  clickToSync: 'Click to sync'
 }

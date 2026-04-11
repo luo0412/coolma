@@ -101,7 +101,7 @@ export default {
       return m.format('YYYY-MM-DD')
     },
     hasNote (val) {
-      if (!val) return false
+      if (!val || !this.calendarNoteDates) return false
       const ymd = val.format('YYYY-MM-DD')
       return this.calendarNoteDates.includes(ymd)
     },

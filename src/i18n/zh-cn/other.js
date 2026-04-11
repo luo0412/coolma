@@ -17,5 +17,30 @@ export default {
   'word:': '词: {word}',
   'paragraph:': '段落: {paragraph}',
   'character:': '字符: {character}',
-  copyContent: '复制内容'
+  copyContent: '复制内容',
+
+  // 同步相关
+  syncConflict: '同步冲突',
+  conflictNote: '本地版本: {localTime} | 云端版本: {serverTime}',
+  localVersion: '本地版本',
+  serverVersion: '云端版本',
+  keepLocal: '保留本地',
+  keepServer: '保留云端',
+  modifiedAt: '修改于 {time}',
+  manualMerge: '手动合并',
+  mergeContent: '合并内容',
+  enterMergedContent: '输入合并后的内容...',
+  resolve: '解决',
+  skipForNow: '稍后处理',
+  skipLogin: '暂不登录',
+  localNotes: '本地笔记',
+  offlineMode: '离线模式',
+  bindWizNote: '绑定为知笔记',
+  sync: '同步',
+  syncing: '同步中...',
+  syncComplete: '同步完成',
+  syncFailed: '同步失败',
+  pendingSync: '待同步 {count} 项',
+  noPendingSync: '暂无待同步',
+  clickToSync: '点击同步'
 }
