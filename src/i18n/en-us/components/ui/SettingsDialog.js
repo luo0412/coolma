@@ -41,5 +41,10 @@ export default {
   runeCardEdit: 'Edit',
   runeCardDelete: 'Delete',
   runeCardDeleteConfirm: 'Are you sure to delete this rune?',
-  runeDragTip: 'Drag to reorder'
+  runeDragTip: 'Drag to reorder',
+  resetSqlite: 'Reset Local Database',
+  resetSqliteHint: 'Clear all local cached notes, will re-pull from cloud on next sync',
+  resetSqliteConfirm: 'Are you sure to reset the local database? All unsynced local notes will be deleted!',
+  resetSqliteSuccess: 'Local database has been reset',
+  resetSqliteFailed: 'Reset failed, please try again'
 }

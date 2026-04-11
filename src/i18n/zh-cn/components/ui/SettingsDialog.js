@@ -41,5 +41,10 @@ export default {
   runeCardEdit: '编辑',
   runeCardDelete: '删除',
   runeCardDeleteConfirm: '确定要删除该符文吗？',
-  runeDragTip: '拖拽可调整顺序'
+  runeDragTip: '拖拽可调整顺序',
+  resetSqlite: '重置本地数据库',
+  resetSqliteHint: '清空所有本地缓存笔记，下次同步时从云端重新拉取',
+  resetSqliteConfirm: '确定要重置本地数据库吗？所有本地未同步的笔记将被清除！',
+  resetSqliteSuccess: '本地数据库已重置',
+  resetSqliteFailed: '重置失败，请重试'
 }

@@ -92,6 +92,14 @@ const DatabaseClient = {
    */
   async createTag(tag) {
     return await ipcRenderer.invoke('db:createTag', tag)
+  },
+
+  /**
+   * 重置 SQLite 数据库（清空所有本地笔记，重置同步状态）
+   * @returns {Promise<boolean>}
+   */
+  async resetDatabase() {
+    return await ipcRenderer.invoke('db:resetDatabase')
   }
 }
 

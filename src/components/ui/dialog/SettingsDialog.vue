@@ -205,6 +205,25 @@
                     </q-select>
                   </div>
                 </div>
+                <q-separator class='q-my-xs' />
+                <div>
+                  <div class='text-body2 text-weight-medium q-mb-xs setting-item setting-item--row'>
+                    <span>{{ $t('resetSqlite') }}</span>
+                    <q-btn
+                      class='fab-btn'
+                      flat
+                      round
+                      dense
+                      size='sm'
+                      color='negative'
+                      icon='delete_forever'
+                      @click='resetSqliteHandler'
+                    />
+                  </div>
+                  <div class='text-caption text-grey-6'>
+                    {{ $t('resetSqliteHint') }}
+                  </div>
+                </div>
               </q-tab-panel>
 
               <q-tab-panel name='rune' class='q-pa-sm'>
@@ -475,6 +494,39 @@ export default {
     },
     openLogFilesHandler: function () {
       openLogFiles()
+    },
+    resetSqliteHandler: async function () {
+      this.$q.dialog({
+        title: this.$t('resetSqlite'),
+        message: this.$t('resetSqliteConfirm'),
+        cancel: { label: this.$t('cancel') },
+        ok: { label: this.$t('confirm'), color: 'negative' }
+      }).onOk(async () => {
+        const DatabaseClient = (await import('../../../utils/DatabaseClient')).default
+        const success = await DatabaseClient.resetDatabase()
+        if (success) {
+          // 重置 offline store 的同步状态
+          this.$store.commit('offline/UPDATE_SYNC_STATUS', {
+            isSyncing: false,
+            lastSyncTime: null,
+            total: 0,
+            synced: 0,
+            pending: 0,
+            conflict: 0
+          })
+          this.$q.notify({
+            message: this.$t('resetSqliteSuccess'),
+            type: 'positive',
+            position: 'top'
+          })
+        } else {
+          this.$q.notify({
+            message: this.$t('resetSqliteFailed'),
+            type: 'negative',
+            position: 'top'
+          })
+        }
+      })
     },
     onRuneSortEnd: function () {
       this.updateStateAndStore({ runeCards: this.localRuneCards })

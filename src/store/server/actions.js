@@ -166,6 +166,16 @@ export default {
     await api.AccountServerApi.Logout()
     ServerFileStorage.removeItemFromLocalStorage('token')
     commit(types.LOGOUT)
+    // 重置离线同步状态（右上角待同步数量）
+    commit('offline/UPDATE_SYNC_STATUS', {
+      isSyncing: false,
+      lastSyncTime: null,
+      total: 0,
+      synced: 0,
+      pending: 0,
+      conflict: 0
+    }, { root: true })
+    commit('offline/SET_INITIALIZED', false, { root: true })
   },
   /**
    * 重新登录

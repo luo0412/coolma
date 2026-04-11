@@ -306,19 +306,22 @@ function registerDatabaseHandlers() {
   ipcMain.handle('db:createNote', async (event, note) => {
     try {
       const now = Date.now()
+      // 防御：将所有字段转成 sql.js 可绑定的安全值
+      const toStr = (v) => (v == null) ? '' : (typeof v === 'string') ? v : (typeof v === 'number') ? String(v) : JSON.stringify(v)
+      const toNum = (v) => (v == null) ? now : (typeof v === 'number') ? v : parseInt(v, 10) || now
       db.run(`
         INSERT INTO notes (doc_guid, title, content, category, tags, data_created, data_modified, sync_status, local_modified, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-        note.doc_guid || null,
-        note.title || 'Untitled',
-        note.content || '',
-        note.category || '/',
-        Array.isArray(note.tags) ? note.tags.join(',') : (note.tags || ''),
-        note.data_created || now,
-        note.data_modified || now,
-        note.sync_status || 'local_only',
-        note.local_modified || now,
+        toStr(note.doc_guid),
+        toStr(note.title) || 'Untitled',
+        toStr(note.content),
+        toStr(note.category) || '/',
+        toStr(note.tags),
+        toNum(note.data_created),
+        toNum(note.data_modified),
+        toStr(note.sync_status) || 'local_only',
+        toNum(note.local_modified),
         now,
         now
       ])
@@ -327,6 +330,7 @@ function registerDatabaseHandlers() {
       return execOne('SELECT * FROM notes WHERE id = ?', [lastId])
     } catch (error) {
       log.error('[DB] createNote error:', error)
+      log.error('[DB] createNote note object keys:', Object.keys(note || {}))
       return null
     }
   })
@@ -337,34 +341,36 @@ function registerDatabaseHandlers() {
       const fields = []
       const values = []
       const now = Date.now()
+      const toStr = (v) => (v == null) ? '' : (typeof v === 'string') ? v : (typeof v === 'number') ? String(v) : JSON.stringify(v)
+      const toNum = (v) => (v == null) ? now : (typeof v === 'number') ? v : parseInt(v, 10) || now
 
       if (updates.title !== undefined) {
         fields.push('title = ?')
-        values.push(updates.title)
+        values.push(toStr(updates.title))
       }
       if (updates.content !== undefined) {
         fields.push('content = ?')
-        values.push(updates.content)
+        values.push(toStr(updates.content))
       }
       if (updates.category !== undefined) {
         fields.push('category = ?')
-        values.push(updates.category)
+        values.push(toStr(updates.category))
       }
       if (updates.tags !== undefined) {
         fields.push('tags = ?')
-        values.push(Array.isArray(updates.tags) ? updates.tags.join(',') : updates.tags)
+        values.push(Array.isArray(updates.tags) ? updates.tags.join(',') : toStr(updates.tags))
       }
       if (updates.doc_guid !== undefined) {
         fields.push('doc_guid = ?')
-        values.push(updates.doc_guid)
+        values.push(toStr(updates.doc_guid))
       }
       if (updates.sync_status !== undefined) {
         fields.push('sync_status = ?')
-        values.push(updates.sync_status)
+        values.push(toStr(updates.sync_status))
       }
       if (updates.server_modified !== undefined) {
         fields.push('server_modified = ?')
-        values.push(updates.server_modified)
+        values.push(toNum(updates.server_modified))
       }
 
       fields.push('data_modified = ?', 'local_modified = ?', 'updated_at = ?')
@@ -384,6 +390,7 @@ function registerDatabaseHandlers() {
       return execOne('SELECT * FROM notes WHERE id = ?', [id])
     } catch (error) {
       log.error('[DB] updateNote error:', error)
+      log.error('[DB] updateNote updates keys:', Object.keys(updates || {}))
       return null
     }
   })
@@ -530,6 +537,21 @@ function registerDatabaseHandlers() {
       return true
     } catch (error) {
       log.error('[DB] createGuidMapping error:', error)
+      return false
+    }
+  })
+
+  // 重置数据库（清空所有本地笔记，重置同步状态）
+  ipcMain.handle('db:resetDatabase', async () => {
+    try {
+      db.run('DELETE FROM notes')
+      db.run('DELETE FROM guid_mapping')
+      db.run('DELETE FROM sync_log')
+      saveDatabase()
+      log.info('[DB] Database reset successfully')
+      return true
+    } catch (error) {
+      log.error('[DB] resetDatabase error:', error)
       return false
     }
   })
