@@ -95,6 +95,18 @@ const DatabaseClient = {
   },
 
   /**
+   * 创建本地 ID ↔ 云端 doc_guid 映射记录
+   * @param {number} localId - 本地笔记 ID
+   * @param {string} cloudGuid - 云端 doc_guid
+   * @param {string} source - 来源：'wiznote'
+   * @returns {Promise<Object|null>}
+   */
+  async createGuidMapping(localId, cloudGuid, source = 'wiznote') {
+    // 主进程 handler 参数名: { localId, serverGuid, service }
+    return await ipcRenderer.invoke('db:createGuidMapping', { localId, serverGuid: cloudGuid, service: source })
+  },
+
+  /**
    * 重置 SQLite 数据库（清空所有本地笔记，重置同步状态）
    * @returns {Promise<boolean>}
    */

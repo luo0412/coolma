@@ -47,9 +47,15 @@ export default {
     return state
   },
   [types.UPDATE_CURRENT_NOTE] (state, payload) {
-    if (payload.html) {
+    // 使用 _isRawMarkdown 标记判断是否是本地原始 markdown
+    // 不能用 if (payload.html) 判断，因为空字符串 '' 也是 falsy
+    if (payload._isRawMarkdown) {
+      state.currentNote = payload
+    } else if (payload.html != null) {
+      // 云端返回的完整笔记对象
       state.currentNote = payload
     } else {
+      // 只更新 info 字段（兼容只有 info 的调用）
       if (!state.currentNote) {
         state.currentNote = {}
       }

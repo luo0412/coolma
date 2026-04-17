@@ -227,16 +227,12 @@ export default {
       return note
     },
 
-    // 删除笔记
+    // 删除笔记（数据库删除由 actions.js 统一处理，这里只更新 Vuex 状态）
     async deleteNote({ commit }, noteId) {
       const DatabaseClient = (await import('../../utils/DatabaseClient')).default
-      const success = await DatabaseClient.deleteNote(noteId)
-      if (success) {
-        commit('DELETE_NOTE', noteId)
-        const stats = await DatabaseClient.getStats()
-        commit('UPDATE_SYNC_STATUS', { pending: stats.pending })
-      }
-      return success
+      commit('DELETE_NOTE', noteId)
+      const stats = await DatabaseClient.getStats()
+      commit('UPDATE_SYNC_STATUS', { pending: stats.pending })
     },
 
     // 选择笔记

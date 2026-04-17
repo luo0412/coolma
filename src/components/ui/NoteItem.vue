@@ -8,6 +8,13 @@
     <div :class='`note-item-title${darkTag} ${denseTag}`'>
       <q-icon :name="fileIcon" class="note-file-icon" size="16px" />
       <span v-html='title'></span>
+      <!-- 同步状态图标 -->
+      <q-icon
+        v-if="syncStatus !== 'synced'"
+        :name="syncStatusIcon"
+        :class="`sync-status-icon ${syncStatusClass}`"
+        size="12px"
+      />
     </div>
 
     <div v-if="!dense" :class='`note-item-summary${darkTag}`' v-html='summary'></div>
@@ -121,6 +128,28 @@ export default {
     },
     modifiedDate () {
       return helper.displayDateElegantly(this.data.dataModified)
+    },
+    // 同步状态
+    syncStatus () {
+      return this.data.sync_status || 'synced'
+    },
+    syncStatusIcon () {
+      switch (this.syncStatus) {
+        case 'local_only': return 'cloud_off'
+        case 'pending_upload': return 'cloud_upload'
+        case 'pending_download': return 'cloud_download'
+        case 'conflict': return 'warning'
+        default: return 'cloud_done'
+      }
+    },
+    syncStatusClass () {
+      switch (this.syncStatus) {
+        case 'local_only': return 'sync-local'
+        case 'pending_upload': return 'sync-pending'
+        case 'pending_download': return 'sync-download'
+        case 'conflict': return 'sync-conflict'
+        default: return 'sync-synced'
+      }
     },
     category () {
       if (helper.isNullOrEmpty(this.data.category)) return ''
@@ -253,5 +282,13 @@ export default {
 </script>
 
 <style scoped>
-
+.sync-status-icon {
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.sync-local { color: #999; }
+.sync-pending { color: #e6a23c; }
+.sync-download { color: #409eff; }
+.sync-conflict { color: #f56c6c; }
+.sync-synced { color: #67c23a; }
 </style>

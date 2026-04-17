@@ -300,6 +300,11 @@ const {
   mapActions
 } = createNamespacedHelpers('client')
 
+const {
+  mapState: mapOfflineState,
+  mapActions: mapOfflineActions
+} = createNamespacedHelpers('offline')
+
 export default {
   name: 'SettingsDialog',
   components: {
@@ -358,6 +363,16 @@ export default {
         this.updateStateAndStore({ runeCards: val })
       }
     },
+    lastSyncTimeFormatted () {
+      if (!this.syncStatus?.lastSyncTime) return this.$t('never')
+      return helper.displayDateElegantly(this.syncStatus.lastSyncTime)
+    },
+    syncStatusText () {
+      const s = this.syncStatus
+      if (s?.isSyncing) return this.$t('syncing')
+      if (!s) return this.$t('never')
+      return `${s.synced || 0}/${s.total || 0}`
+    },
     ...mapState([
       'language',
       'darkMode',
@@ -369,7 +384,8 @@ export default {
       'themes',
       'autoSaveGap',
       'runeCards'
-    ])
+    ]),
+    ...mapOfflineState(['syncStatus', 'conflictNotes'])
   },
   methods: {
     toggle: function () {
@@ -601,7 +617,8 @@ export default {
     ...mapActions([
       'toggleChanged',
       'updateStateAndStore'
-    ])
+    ]),
+    ...mapOfflineActions(['sync', 'refresh'])
   },
   mounted () {
     bus.$on(events.UPDATE_EVENTS.updateAvailable, this.updateAvailableHandler)

@@ -61,7 +61,8 @@ export default {
   data () {
     return {
       contentEditor: {},
-      firstTimeLoad: false
+      firstTimeLoad: false,
+      previousNoteInfo: null
     }
   },
   computed: {
@@ -188,7 +189,7 @@ export default {
         })
       }
     },
-    ...mapServerActions(['updateNote', 'updateNoteState', 'updateContentsList', 'uploadImage']),
+    ...mapServerActions(['updateNote', 'updateNoteWithInfo', 'updateNoteState', 'updateContentsList', 'uploadImage']),
     ...mapClientActions(['importImageFromLocal'])
   },
   created () {
@@ -307,6 +308,17 @@ export default {
   },
   watch: {
     currentNote: function (currentData) {
+      console.log('[Muya watcher] fired, currentData type:', typeof currentData, 'len:', (currentData || '').length, 'preview:', (currentData || '').substring(0, 80))
+      console.log('[Muya watcher] previousNoteInfo:', this.previousNoteInfo ? `docGuid=${this.previousNoteInfo.docGuid}` : null, 'noteState:', this.noteState)
+      // previousNoteInfo 保存的是上一次渲染完成时的笔记 info（上一个 watcher 调用末尾设置的）
+      // 此时 Vuex state 已经更新为新笔记，所以 previousNoteInfo 正好就是"旧笔记"的信息
+      const previousInfo = this.previousNoteInfo
+      if ((this.noteState === 'changed' || this.noteState === 'none') && previousInfo) {
+        const markdownToSave = this.contentEditor?.getMarkdown()
+        if (markdownToSave) {
+          this.updateNoteWithInfo({ markdown: markdownToSave, noteInfo: previousInfo })
+        }
+      }
       this.contentEditor.clearHistory()
       try {
         this.contentEditor.focus()
@@ -317,6 +329,10 @@ export default {
         if (e.message.indexOf('Md2V') !== -1) return
         debugLogger.Error(e, e.message)
       }
+      // 在下一个 tick 更新 previousNoteInfo（此时 currentNote 已完全切换为新笔记）
+      this.$nextTick(() => {
+        this.previousNoteInfo = this.$store.state.server.currentNote?.info || null
+      })
     },
     theme: function (t) {
       attachThemeColor(t)

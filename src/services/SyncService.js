@@ -293,10 +293,14 @@ class SyncService {
               kbGuid,
               docGuid
             })
+            // 提取 markdown 再存储：content 是 { info, html, resources }，需要从 html 解析出 markdown
+            const markdownContent = content && content.html
+              ? helper.extractMarkdownFromMDNote(content.html, kbGuid, docGuid, content.resources || [])
+              : ''
             await DatabaseService.createNote({
               doc_guid: docGuid,
               title: doc.title,
-              content: content || '',
+              content: markdownContent,
               category: doc.category || '/',
               tags: doc.tags || '',
               data_created: doc.dataCreated || doc.data_created,

@@ -51,13 +51,28 @@ export default {
     return []
   },
   currentNote: ({ currentNote }) => {
-    if (helper.isNullOrEmpty(currentNote) || Object.keys(currentNote).length === 0) return ''
+    if (helper.isNullOrEmpty(currentNote) || Object.keys(currentNote).length === 0) {
+      console.log('[currentNote getter] EMPTY: currentNote is', currentNote)
+      return ''
+    }
+
+    console.log('[currentNote getter] currentNote keys:', Object.keys(currentNote), '_isRawMarkdown:', currentNote._isRawMarkdown, 'info.title:', currentNote.info?.title)
 
     // 本地 SQLite 来的原始 markdown，直接返回不做任何处理
     if (currentNote._isRawMarkdown) {
-      return currentNote.html || ''
+      const raw = currentNote.html || ''
+      // 防御：如果 html 是整个 API 响应对象而不是 markdown，返回空字符串
+      if (typeof raw === 'object' || (typeof raw === 'string' && raw.trim().startsWith('{'))) {
+        console.warn('[currentNote getter] REJECTED: malformed content')
+        return ''
+      }
+      console.log('[currentNote getter] RETURNING _isRawMarkdown, len:', raw.length)
+      return raw
     }
 
+    if (helper.isNullOrEmpty(currentNote.info?.title)) {
+      return ''
+    }
     const isHtml = !_.endsWith(currentNote.info.title, '.md')
 
     const {
