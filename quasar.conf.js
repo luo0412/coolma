@@ -278,6 +278,52 @@ module.exports = function (/* ctx */) {
           provider: 'github',
           releaseType: 'draft'
         },
+
+        // ─── 打包完成后裁剪 Electron 多余模块 ───
+        afterPack: './scripts/after-pack.js',
+
+        // ─── 压缩 asar 包 ───
+        // asarUnpack 用于将大体积模块解压到外部，asar 保持 true 即可
+        asar: true,
+        asarUnpack: '**/node_modules/{monaco-editor,echarts,mermaid,vega*,markmap*,katex,@quasar/extras}/**/*',
+
+        // ─── 排除 node_modules 中的无用模块 ───
+        files: [
+          '**/*',
+          './package.json',
+          'dist/electron/**/*',
+          '!box-im-wujie/**/*',
+          '!public/box-im/**/*',
+          // 开发依赖裁剪
+          '!node_modules/@babel/**/*',
+          '!node_modules/babel*/*',
+          '!node_modules/webpack/**/*',
+          '!node_modules/terser*/**/*',
+          '!node_modules/eslint*/*',
+          '!node_modules/prettier*/**/*',
+          '!node_modules/.bin/**/*',
+          // 测试/文档/示例文件
+          '!node_modules/**/test/**/*',
+          '!node_modules/**/tests/**/*',
+          '!node_modules/**/docs/**/*',
+          '!node_modules/**/example*/**/*',
+          '!node_modules/**/readme*',
+          '!node_modules/**/changelog*',
+          '!node_modules/**/license*',
+          '!node_modules/**/HISTORY*',
+          '!node_modules/**/.github/**/*',
+          // vuepress 相关（完全不需要）
+          '!node_modules/vuepress/**/*',
+          '!node_modules/vuepress-theme-vdoing/**/*',
+          // 其他开发文件
+          '!dist/**/*',
+          '!.cursor/**/*',
+          '!.github/**/*',
+          '!.vscode/**/*',
+          '!.workbuddy/**/*',
+          '!docs/**/*',
+        ],
+
         mac: {
           target: [
             'dmg',
@@ -286,6 +332,7 @@ module.exports = function (/* ctx */) {
           // eslint-disable-next-line no-template-curly-in-string
           artifactName: 'Coolma-${version}-${arch}-mac.${ext}'
         },
+
         win: {
           target: [
             'nsis',
@@ -293,13 +340,17 @@ module.exports = function (/* ctx */) {
           ],
           legalTrademarks: 'Coolma'
         },
+
         nsis: {
           // eslint-disable-next-line no-template-curly-in-string
           artifactName: 'Coolma-${version}-${arch}-win.${ext}',
           perMachine: false,
           oneClick: false,
-          allowToChangeInstallationDirectory: true
+          allowToChangeInstallationDirectory: true,
+          // 使用 zip 压缩格式减小安装包体积
+          // useZip: true
         },
+
         linux: {
           target: [
             'AppImage',
@@ -309,30 +360,7 @@ module.exports = function (/* ctx */) {
           vendor: 'Coolma',
           // eslint-disable-next-line no-template-curly-in-string
           artifactName: 'Coolma-${version}-${arch}-linux.${ext}'
-        },
-        files: [
-          '**/*',
-          './package.json',
-          'dist/electron/**/*',
-          '!box-im-wujie/**/*',
-          '!public/box-im/**/*',
-          // '!node_modules/**/*',
-          '!dist/**/*',
-          '!.cursor/**/*',
-          '!.github/**/*',
-          '!.vscode/**/*',
-          '!docs/**/*',
-        ],
-        asar: true,
-        asarUnpack: [
-          '**/node_modules/monaco-editor/**/*',
-          '**/node_modules/echarts/**/*',
-          '**/node_modules/mermaid/**/*',
-          '**/node_modules/vega*/**/*',
-          '**/node_modules/markmap*/**/*',
-          '**/node_modules/katex/**/*',
-          '**/node_modules/@quasar/extras/**/*'
-        ]
+        }
       },
 
       // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration

@@ -18,6 +18,9 @@ export default {
   'paragraph:': 'Paragraph: {paragraph}',
   'character:': 'Characters: {character}',
   copyContent: 'Copy Content',
+  defaultNoteTitle: '# 【{category}】New Note-{date}.md',
+
+  // Sync related
 
   // Sync related
   syncConflict: 'Sync Conflict',

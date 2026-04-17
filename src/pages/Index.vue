@@ -400,11 +400,21 @@ export default {
       this.updateStateAndStore({ splitterWidth: this.splitterWidthValue })
     },
     addNoteHandler: function () {
+      // 生成默认标题：【所在文件夹名】输入笔记名-YYYYMM（带 # 作为 Markdown 一级标题）
+      const category = this.currentCategory || ''
+      const categoryName = category.split('/').filter(Boolean).pop() || ''
+      const now = new Date()
+      const yyyy = now.getFullYear()
+      const mm = String(now.getMonth() + 1).padStart(2, '0')
+      const defaultTitle = this.$t('defaultNoteTitle', {
+        category: categoryName,
+        date: `${yyyy}${mm}`
+      })
       this.$q
         .dialog({
           title: this.$t('createNote'),
           prompt: {
-            model: this.$t('noteTitle'),
+            model: defaultTitle,
             type: 'text',
             attrs: {
               spellcheck: false
