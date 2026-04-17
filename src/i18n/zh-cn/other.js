@@ -18,7 +18,7 @@ export default {
   'paragraph:': '段落: {paragraph}',
   'character:': '字符: {character}',
   copyContent: '复制内容',
-  defaultNoteTitle: '# 【{category}】新笔记-{date}.md',
+  defaultNoteTitle: '【{category}】新笔记-{date}.md',
 
   // 同步相关
   syncConflict: '同步冲突',
