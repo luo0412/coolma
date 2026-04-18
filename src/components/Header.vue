@@ -396,6 +396,7 @@ export default {
         this.expandFullPaneLayout()
       }
       this.getCategoryNotes()
+      this.refreshTagNotesCount()
     },
 
     toggleCalendarDrawer () {
@@ -439,7 +440,7 @@ export default {
       this.$refs.tagDialog.toggle()
     },
 
-    ...mapServerActions(['logout', 'getCategoryNotes']),
+    ...mapServerActions(['logout', 'getCategoryNotes', 'refreshTagNotesCount']),
     ...mapClientActions(['toggleChanged', 'cyclePaneLayout', 'expandFullPaneLayout']),
     ...mapOfflineActions(['sync']),
 
@@ -519,7 +520,7 @@ export default {
   letter-spacing: 0.3px;
   font-weight: 600;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;

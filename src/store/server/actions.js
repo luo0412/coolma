@@ -68,6 +68,34 @@ function readFileAsync (f) {
   })
 }
 
+/** 防抖刷新所有标签的笔记数量（500ms 间隔） */
+let _debouncedRefreshTagCounts = null
+
+function getDebouncedRefreshTagCounts () {
+  if (!_debouncedRefreshTagCounts) {
+    _debouncedRefreshTagCounts = _.debounce(async function (store) {
+      const { kbGuid, tags } = store.state
+      if (!kbGuid || !tags || !tags.length) return
+      const countMap = {}
+      await Promise.all(
+        tags.map(async tag => {
+          try {
+            const count = await api.KnowledgeBaseApi.getTagNoteCount({
+              kbGuid,
+              data: { tag: tag.tagGuid }
+            })
+            countMap[tag.tagGuid] = count
+          } catch (err) {
+            countMap[tag.tagGuid] = 0
+          }
+        })
+      )
+      store.commit(types.UPDATE_TAG_NOTES_COUNT, countMap)
+    }, 500)
+  }
+  return _debouncedRefreshTagCounts
+}
+
 export default {
   /**
    * 从本地缓存中读取数据，初始化状态树
@@ -994,7 +1022,11 @@ export default {
     if (currentNote && currentNote.info.docGuid === docGuid) {
       commit(types.CLEAR_CURRENT_NOTE)
     }
-    await this.dispatch('server/getCategoryNotes')
+
+    // 乐观更新：立即从 UI 移除，云端删除异步进行
+    const newNotes = state.currentNotes.filter(n => n.docGuid !== docGuid)
+    commit(types.UPDATE_CURRENT_NOTES, newNotes)
+
     Notify.create({
       color: 'red-10',
       message: i18n.t('deleteNoteSuccessfully'),
@@ -1237,6 +1269,13 @@ export default {
     })
     commit(types.UPDATE_CURRENT_NOTES_LOADING_STATE, false)
     commit(types.UPDATE_CURRENT_NOTES, result)
+  },
+  /**
+   * 防抖刷新所有标签的笔记数量。
+   * 切换到标签树视图时调用，避免频繁切换触发大量请求。
+   */
+  refreshTagNotesCount () {
+    getDebouncedRefreshTagCounts()(this)
   },
   async getAllTags ({
     commit,

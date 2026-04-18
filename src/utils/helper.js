@@ -37,7 +37,7 @@ function convertHtml2Markdown (html, kbGuid, docGuid, resources) {
       )
     })
     ClientFileStorage.setItemInStore('currentResources', resources)
-    const $ = cheerio.load(html)
+    const $ = cheerio.load(html, { normalizeWhitespace: false })
     const $body = $('html').clone()
     $body.find('style').remove()
     $body.removeClass()
@@ -73,7 +73,7 @@ function extractMarkdownFromMDNote (html, kbGuid, docGuid, resources = []) {
   ClientFileStorage.setItemInStore('currentResources', resources)
   return wizMarkdownParser.extract(html, {
     convertImgTag: true,
-    normalizeWhitespace: true
+    normalizeWhitespace: false
   })
 }
 

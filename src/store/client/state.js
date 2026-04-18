@@ -9,7 +9,7 @@ export default function () {
     enableSelfHostServer: false,
     imageUploadService: 'wizOfficialImageUploadService',
     imageUploadServiceParam: {},
-    noteOrderType: 'orderByModifiedTime',
+    noteOrderType: 'orderByNoteTitle',
     apiServerUrl: '',
     postParam: '',
     jsonPath: '',

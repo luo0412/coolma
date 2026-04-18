@@ -147,7 +147,7 @@ function initSchema() {
   db.run(`
     CREATE TABLE IF NOT EXISTS notes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      doc_guid TEXT UNIQUE,
+      doc_guid TEXT,
       title TEXT NOT NULL DEFAULT 'Untitled',
       content TEXT DEFAULT '',
       category TEXT DEFAULT '/',
@@ -163,7 +163,8 @@ function initSchema() {
   `)
 
   // 索引
-  db.run(`CREATE INDEX IF NOT EXISTS idx_notes_doc_guid ON notes(doc_guid)`)
+  // 索引（条件唯一索引：仅对非 NULL 的 doc_guid 强制唯一性，允许多个本地笔记 doc_guid 为 NULL）
+  db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_notes_doc_guid ON notes(doc_guid) WHERE doc_guid IS NOT NULL`)
   db.run(`CREATE INDEX IF NOT EXISTS idx_notes_category ON notes(category)`)
   db.run(`CREATE INDEX IF NOT EXISTS idx_notes_sync_status ON notes(sync_status)`)
 
@@ -306,14 +307,14 @@ function registerDatabaseHandlers() {
   ipcMain.handle('db:createNote', async (event, note) => {
     try {
       const now = Date.now()
-      // 防御：将所有字段转成 sql.js 可绑定的安全值
       const toStr = (v) => (v == null) ? '' : (typeof v === 'string') ? v : (typeof v === 'number') ? String(v) : JSON.stringify(v)
       const toNum = (v) => (v == null) ? now : (typeof v === 'number') ? v : parseInt(v, 10) || now
+      const toStrOrNull = (v) => (v == null) ? null : (typeof v === 'string') ? v : (typeof v === 'number') ? String(v) : JSON.stringify(v)
       db.run(`
         INSERT INTO notes (doc_guid, title, content, category, tags, data_created, data_modified, sync_status, local_modified, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-        toStr(note.doc_guid),
+        toStrOrNull(note.doc_guid),
         toStr(note.title) || 'Untitled',
         toStr(note.content),
         toStr(note.category) || '/',
@@ -331,6 +332,7 @@ function registerDatabaseHandlers() {
     } catch (error) {
       log.error('[DB] createNote error:', error)
       log.error('[DB] createNote note object keys:', Object.keys(note || {}))
+      log.error('[DB] createNote doc_guid:', note?.doc_guid, 'sync_status:', note?.sync_status)
       return null
     }
   })
@@ -362,7 +364,7 @@ function registerDatabaseHandlers() {
       }
       if (updates.doc_guid !== undefined) {
         fields.push('doc_guid = ?')
-        values.push(toStr(updates.doc_guid))
+        values.push(updates.doc_guid == null ? null : toStr(updates.doc_guid))
       }
       if (updates.sync_status !== undefined) {
         fields.push('sync_status = ?')

@@ -46,6 +46,13 @@ export default {
           return n1.title > n2.title ? 1 : -1
         })
       }
+      if (rootState.client.noteOrderType === 'orderByCreatedTime') {
+        return filteredNotes.sort((n1, n2) => {
+          const t1 = n1.dataCreated || 0
+          const t2 = n2.dataCreated || 0
+          return t2 - t1
+        })
+      }
       return filteredNotes
     }
     return []

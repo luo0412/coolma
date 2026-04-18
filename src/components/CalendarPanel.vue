@@ -21,20 +21,43 @@
         </template>
         <template slot="headerRender" slot-scope="{ value, type, onChange, onTypeChange }">
           <div class="calendar-panel-header">
-            <a-select
-              :value="calendarDateBasis"
-              size="small"
-              class="calendar-date-basis-select"
-              :get-popup-container="getMonthPickerPopupContainer"
-              @change="onDateBasisChange"
-            >
-              <a-select-option value="created">
-                创建日期
-              </a-select-option>
-              <a-select-option value="modified">
-                修改日期
-              </a-select-option>
-            </a-select>
+            <div class="calendar-header-group">
+              <span class="calendar-header-label">{{ $t('calendarSortLabel') }}</span>
+              <a-select
+                :value="noteOrderType"
+                size="small"
+                class="calendar-note-order-select"
+                :get-popup-container="getMonthPickerPopupContainer"
+                @change="onNoteOrderChange"
+              >
+                <a-select-option value="orderByNoteTitle">
+                  {{ $t('orderByNoteTitle') }}
+                </a-select-option>
+                <a-select-option value="orderByModifiedTime">
+                  {{ $t('orderByModifiedTime') }}
+                </a-select-option>
+                <a-select-option value="orderByCreatedTime">
+                  {{ $t('orderByCreatedTime') }}
+                </a-select-option>
+              </a-select>
+            </div>
+            <div class="calendar-header-group">
+              <span class="calendar-header-label">{{ $t('calendarFilterLabel') }}</span>
+              <a-select
+                :value="calendarDateBasis"
+                size="small"
+                class="calendar-date-basis-select"
+                :get-popup-container="getMonthPickerPopupContainer"
+                @change="onDateBasisChange"
+              >
+                <a-select-option value="created">
+                  创建日期
+                </a-select-option>
+                <a-select-option value="modified">
+                  修改日期
+                </a-select-option>
+              </a-select>
+            </div>
             <a-month-picker
               :value="value"
               size="small"
@@ -72,7 +95,7 @@ export default {
     barStyle () {
       return { display: 'none' }
     },
-    ...mapClientState(['calendarSelectedDate', 'calendarDateBasis']),
+    ...mapClientState(['calendarSelectedDate', 'calendarDateBasis', 'noteOrderType']),
     ...mapServerState(['calendarNoteDates'])
   },
   watch: {
@@ -117,6 +140,10 @@ export default {
       this.getCategoryNotes()
       this.fetchMonthNoteDates()
     },
+    onNoteOrderChange (val) {
+      if (val === this.noteOrderType) return
+      this.updateStateAndStore({ noteOrderType: val })
+    },
     getMonthPickerPopupContainer (trigger) {
       return trigger?.parentElement || document.body
     },
@@ -144,7 +171,7 @@ export default {
       const m = this.pickDate.month() + 1
       this.fetchCalendarNoteDates({ year: y, month: m })
     },
-    ...mapClientActions(['toggleChanged']),
+    ...mapClientActions(['toggleChanged', 'updateStateAndStore']),
     ...mapServerActions(['getCategoryNotes', 'fetchCalendarNoteDates'])
   }
 }
@@ -161,13 +188,30 @@ export default {
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
   padding: 8px 14px 8px 0;
+}
+
+.calendar-header-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calendar-header-label {
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
 }
 
 .calendar-date-basis-select {
   min-width: 104px;
   max-width: 120px;
+}
+
+.calendar-note-order-select {
+  min-width: 120px;
+  max-width: 140px;
 }
 
 .calendar-month-picker {

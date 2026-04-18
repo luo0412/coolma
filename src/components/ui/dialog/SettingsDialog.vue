@@ -86,19 +86,6 @@
                 </div>
                 <q-separator class='q-my-xs' />
                 <div>
-                  <div class='text-body2 text-weight-medium q-mb-xs setting-item setting-item--row'>
-                    <span>{{ $t('noteListDenseMode') }}</span>
-                    <q-toggle
-                      :value='noteListDenseMode'
-                      color='black'
-                      @input="
-                        v => toggleChanged({ key: 'noteListDenseMode', value: v })
-                      "
-                    />
-                  </div>
-                </div>
-                <q-separator class='q-my-xs' />
-                <div>
                   <div class='text-body2 text-weight-medium q-mb-xs setting-item setting-item--row fa-align-center'>
                     <span>{{ $t('openLogFiles') }}</span>
                     <q-btn
@@ -145,6 +132,18 @@
                       color='primary'
                       @input="
                         v => toggleChanged({ key: 'markdownOnly', value: v })
+                      "
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div class='text-body2 text-weight-medium q-mb-xs setting-item setting-item--row'>
+                    <span>{{ $t('noteListDenseMode') }}</span>
+                    <q-toggle
+                      :value='noteListDenseMode'
+                      color='primary'
+                      @input="
+                        v => toggleChanged({ key: 'noteListDenseMode', value: v })
                       "
                     />
                   </div>
@@ -322,8 +321,9 @@ export default {
         'none'
       ],
       noteOrderOptionsPlain: [
+        'orderByNoteTitle',
         'orderByModifiedTime',
-        'orderByNoteTitle'
+        'orderByCreatedTime'
       ],
       version: version,
       checkingNotify: null,
@@ -347,8 +347,9 @@ export default {
     },
     noteOrderOptions: function () {
       return [
+        this.$t('orderByNoteTitle'),
         this.$t('orderByModifiedTime'),
-        this.$t('orderByNoteTitle')
+        this.$t('orderByCreatedTime')
       ]
     },
     autoSaveGapLabel: function () {

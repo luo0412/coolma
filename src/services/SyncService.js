@@ -342,10 +342,28 @@ class SyncService {
 
     for (const note of pendingNotes) {
       try {
-        // 确保笔记有 doc_guid（纯本地新建的笔记跳过，因为没有云端对应）
         if (!note.doc_guid) {
-          console.warn('[SyncService] Skipping local-only note (no doc_guid):', note.id, note.title)
-          continue
+          // 纯本地新建的笔记（无 doc_guid）：尝试在云端创建
+          console.log('[SyncService] Creating new note on cloud:', note.title)
+          const result = await api.createDoc({
+            title: note.title,
+            content: note.content,
+            category: note.category
+          })
+          if (result?.guid) {
+            await DatabaseService.updateNote(note.id, {
+              doc_guid: result.guid,
+              sync_status: 'synced'
+            })
+            await DatabaseService.createGuidMapping(note.id, result.guid, 'wiznote')
+            pushedCount++
+            continue
+          } else {
+            // 创建失败，保持 local_only 状态
+            console.warn('[SyncService] createDoc returned no guid:', result)
+            errors++
+            continue
+          }
         }
 
         console.log('[SyncService] Updating note:', note.doc_guid, 'title:', note.title)
@@ -358,8 +376,10 @@ class SyncService {
         await DatabaseService.updateNote(note.id, { sync_status: 'synced' })
         pushedCount++
       } catch (error) {
-        console.error(`[SyncService] Push note ${note.id} (${note.doc_guid}) failed:`, error)
+        console.error(`[SyncService] Push note ${note.id} (${note.doc_guid || 'local_only'}) failed:`, error)
         errors++
+        // 推送失败时，回退 sync_status 为 pending_upload，下次同步时重试
+        await DatabaseService.updateNote(note.id, { sync_status: 'pending_upload' })
       }
     }
 
