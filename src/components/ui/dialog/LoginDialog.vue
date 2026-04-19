@@ -168,7 +168,8 @@ export default {
       ipcRenderer.send('window-close')
     },
     skipLogin: function () {
-      // 跳过登录，初始化本地数据库，以离线模式运行
+      // 跳过登录，初始化离线模式，以离线模式运行
+      this.$store.dispatch('server/initOfflineMode')
       this.$emit('skip-login')
       this.toggle()
     },

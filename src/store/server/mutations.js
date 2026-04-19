@@ -40,6 +40,9 @@ export default {
     }
     state.isLogin = false
     state.noteState = 'default'
+    state.offlineCategories = []
+    state.offlineNotes = []
+    state.offlineCurrentCategory = ''
     return state
   },
   [types.UPDATE_CURRENT_NOTES] (state, payload) {
@@ -127,6 +130,28 @@ export default {
   },
   [types.SET_CALENDAR_NOTE_DATES] (state, dates) {
     state.calendarNoteDates = dates
+    return state
+  },
+  [types.SET_OFFLINE_CATEGORIES] (state, categories) {
+    state.offlineCategories = categories
+    return state
+  },
+  [types.SET_OFFLINE_NOTES] (state, notes) {
+    state.offlineNotes = notes
+    return state
+  },
+  [types.SET_OFFLINE_CURRENT_CATEGORY] (state, category) {
+    state.offlineCurrentCategory = category
+    return state
+  },
+  [types.UPDATE_OFFLINE_CATEGORIES] (state, categories) {
+    state.offlineCategories = categories
+    return state
+  },
+  [types.ADD_OFFLINE_CATEGORY] (state, category) {
+    if (!state.offlineCategories.find(c => c.key === category.key)) {
+      state.offlineCategories.push(category)
+    }
     return state
   }
 }

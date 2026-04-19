@@ -117,6 +117,34 @@ class DatabaseService {
   getStats() {
     return ipcRenderer.invoke('db:getStats')
   }
+
+  /**
+   * 获取所有符文
+   */
+  getRunes() {
+    return ipcRenderer.invoke('db:getRunes')
+  }
+
+  /**
+   * 保存符文（创建或更新）
+   */
+  saveRune(rune) {
+    return ipcRenderer.invoke('db:saveRune', rune)
+  }
+
+  /**
+   * 删除符文
+   */
+  deleteRune(id) {
+    return ipcRenderer.invoke('db:deleteRune', id)
+  }
+
+  /**
+   * 批量保存符文（用于排序）
+   */
+  saveRunes(runes) {
+    return ipcRenderer.invoke('db:saveRunes', runes)
+  }
 }
 
 export default new DatabaseService()

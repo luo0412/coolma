@@ -12,6 +12,12 @@ export default {
   lockModeOff: '键盘锁定已被解除',
   title: '标题',
   confirm: '确认',
+  cancel: '取消',
+  ok: '确定',
+  resetRankingConfirmTitle: '确认重置',
+  resetRankingConfirmMessage: '您确定要重置排行榜吗？\n这将清除所有评级设置并移除所有图片，此操作无法撤销。',
+  resetRankingConfirm: '确认重置',
+  resetRankingCancel: '取消',
   mindmap: '思维导图',
   wordCount: '字数统计',
   'word:': '词: {word}',
@@ -43,5 +49,15 @@ export default {
   syncFailed: '同步失败',
   pendingSync: '待同步 {count} 项',
   noPendingSync: '暂无待同步',
-  clickToSync: '点击同步'
+  clickToSync: '点击同步',
+
+  // 离线笔记同步
+  offlineNotesFound: '发现离线笔记',
+  offlineNotesFoundHint: '检测到 {count} 条离线笔记，是否立即同步到云端？',
+  offlineNotesMore: '...还有 {count} 条',
+  mergeRuleTitle: '同步规则',
+  mergeRuleLocalOverride: '同文件夹路径 + 同标题：本地版本覆盖云端；无匹配则新建为新笔记；多个同名笔记各自新建，不会互相覆盖。',
+  syncNow: '立即同步',
+  skipSync: '暂不同步',
+  myNotes: '我的笔记'
 }

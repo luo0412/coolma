@@ -6,6 +6,7 @@ import helper from 'src/utils/helper'
 import { i18n } from 'boot/i18n'
 import _ from 'lodash'
 import { importImage, uploadImages } from 'src/ApiInvoker'
+import DatabaseService from 'src/services/DatabaseService'
 
 export default {
   initClientStore ({ commit, state }) {
@@ -88,5 +89,24 @@ export default {
   },
   setRightClickCategoryItem ({ commit }, categoryPath) {
     commit(types.TOGGLE_CHANGED, { key: 'rightClickCategoryItem', value: categoryPath })
+  },
+  async loadRunes ({ commit }) {
+    try {
+      const runes = await DatabaseService.getRunes()
+      if (runes && runes.length > 0) {
+        commit(types.TOGGLE_CHANGED, { key: 'runeCards', value: runes })
+      }
+    } catch (err) {
+      console.error('[Runes] loadRunes error:', err)
+    }
+  },
+  async saveRune (_, rune) {
+    return await DatabaseService.saveRune(rune)
+  },
+  async deleteRune (_, id) {
+    return await DatabaseService.deleteRune(id)
+  },
+  async saveRunes (_, runes) {
+    return await DatabaseService.saveRunes(runes)
   }
 }

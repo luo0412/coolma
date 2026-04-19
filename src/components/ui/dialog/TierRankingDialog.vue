@@ -160,11 +160,11 @@
     <!-- 重置确认弹窗 -->
     <div v-if='showResetModal' class='reset-modal' @click.self='showResetModal = false'>
       <div class='reset-content'>
-        <h3>⚠️ 确认重置</h3>
-        <p>您确定要重置排行榜吗？<br>这将清除所有评级设置并移除所有图片，此操作无法撤销。</p>
+        <h3>⚠️ {{ $t('resetRankingConfirmTitle') }}</h3>
+        <p>{{ $t('resetRankingConfirmMessage') }}</p>
         <div class='reset-buttons'>
-          <button class='reset-confirm-btn' @click='confirmReset'>确认重置</button>
-          <button class='reset-cancel-btn' @click='showResetModal = false'>取消</button>
+          <button class='reset-confirm-btn' @click='confirmReset'>{{ $t('resetRankingConfirm') }}</button>
+          <button class='reset-cancel-btn' @click='showResetModal = false'>{{ $t('resetRankingCancel') }}</button>
         </div>
       </div>
     </div>

@@ -8,11 +8,11 @@
       :content-style="{ minWidth: 'auto' }"
     >
       <q-pull-to-refresh @refresh="refreshNoteListHandler">
-        <q-list v-if="currentNotes.length > 0" class="note-list-content">
+        <q-list v-if="displayNotes.length > 0" class="note-list-content">
           <q-item
             clickable
             v-ripple="{ color: '#212121' }"
-            v-for="(noteField, index) in currentNotes"
+            v-for="(noteField, index) in displayNotes"
             :key="index"
             :class="`note-item${$q.dark.isActive ? '-dark' : ''} no-padding`"
             :active="activeNote(noteField)"
@@ -34,7 +34,7 @@
     <q-card
       class="note-list-bottom text-center"
       v-ripple
-      v-if="isLogin"
+      v-if="isLogin || isOfflineMode"
     >
       <span>{{ category }}</span>
     </q-card>
@@ -53,6 +53,7 @@ import helper from '../utils/helper'
 import bus from './bus'
 import events from 'src/constants/events'
 import { showContextMenu as showNoteItemContextMenu } from 'src/contextMenu/noteList'
+import { OFFLINE_ROOT_CATEGORY_KEY } from 'src/store/server/actions'
 const { mapGetters: mapServerGetters, mapState: mapServerState, mapActions: mapServerActions } = createNamespacedHelpers('server')
 const { mapState: mapClientState, mapActions: mapClientActions } = createNamespacedHelpers('client')
 export default {
@@ -84,6 +85,7 @@ export default {
         return this.calendarSelectedDate.replace(/-/g, '/')
       }
       if (helper.isNullOrEmpty(this.currentCategory)) return ''
+      if (!this.tags) return ''
       const tagIndex = this.tags.findIndex(
         t => t.tagGuid === this.currentCategory
       )
@@ -99,9 +101,27 @@ export default {
         }
       }
     },
+    isOfflineMode () {
+      return !this.isLogin && this.offlineNotes && this.offlineNotes.length >= 0
+    },
+    displayNotes () {
+      if (!this.isLogin) {
+        return this.offlineNotes.map(note => ({
+          docGuid: note.doc_guid,
+          title: note.title,
+          abstractText: note.content ? note.content.substring(0, 200) : '',
+          category: note.category || '/',
+          dataCreated: note.data_created,
+          dataModified: note.data_modified || note.local_modified || note.data_created,
+          sync_status: note.sync_status,
+          _localId: note.id
+        }))
+      }
+      return this.currentNotes
+    },
     ...mapServerGetters(['activeNote', 'currentNotes']),
-    ...mapServerState(['isCurrentNotesLoading', 'currentCategory', 'isLogin', 'tags', 'currentNote']),
-    ...mapClientState(['rightClickCategoryItem', 'rightClickNoteItem', 'noteListDenseMode', 'sidebarTreeType', 'calendarSelectedDate'])
+    ...mapServerState(['isCurrentNotesLoading', 'currentCategory', 'isLogin', 'tags', 'currentNote', 'offlineNotes', 'offlineCurrentCategory']),
+    ...mapClientState(['rightClickCategoryItem', 'rightClickNoteItem', 'noteListDenseMode', 'sidebarTreeType', 'calendarSelectedDate']),
   },
   methods: {
     deleteCategoryHandler: function () {
@@ -129,15 +149,14 @@ export default {
       Loading.hide()
       this.exportMarkdownFiles(notes, categoryToExport)
     },
-    refreshNoteListHandler: async function (done) {
-      const tagIndex = this.tags.findIndex(
+    async refreshNoteListHandler () {
+      const tagIndex = this.tags?.findIndex(
         t => t.tagGuid === this.currentCategory
-      )
+      ) ?? -1
       await this.updateCurrentCategory({
         type: tagIndex === -1 ? 'category' : 'tag',
-        data: this.currentCategory
+        data: this.currentCategory ?? ''
       })
-      done()
     },
     /** NoteItem Action Following */
     renameNoteHandler: function () {

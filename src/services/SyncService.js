@@ -21,7 +21,7 @@ const api = {
    */
   async getDocs(since = null, docGuid = null) {
     const kbGuid = getKbGuid()
-    if (!kbGuid) {
+    if (!kbGuid || kbGuid === 'null') {
       throw new Error('[SyncService] kbGuid is not available, please login first')
     }
 
@@ -81,7 +81,7 @@ const api = {
    */
   async createDoc(note) {
     const kbGuid = getKbGuid()
-    if (!kbGuid) {
+    if (!kbGuid || kbGuid === 'null') {
       throw new Error('[SyncService] kbGuid is not available, please login first')
     }
 
@@ -110,8 +110,6 @@ const api = {
         data: {
           html,
           title: note.title || 'Untitled',
-          kbGuid,
-          docGuid,
           resources: [],
           type: 'document'
         }
@@ -129,7 +127,7 @@ const api = {
    */
   async updateDoc(docGuid, updates) {
     const kbGuid = getKbGuid()
-    if (!kbGuid) {
+    if (!kbGuid || kbGuid === 'null') {
       throw new Error('[SyncService] kbGuid is not available, please login first')
     }
 
@@ -143,8 +141,6 @@ const api = {
     const data = {
       html,
       title: updates.title,
-      kbGuid,
-      docGuid,
       resources: updates.resources || [],
       type: 'document'
     }
@@ -168,7 +164,7 @@ const api = {
    */
   async deleteDoc(docGuid) {
     const kbGuid = getKbGuid()
-    if (!kbGuid) {
+    if (!kbGuid || kbGuid === 'null') {
       throw new Error('[SyncService] kbGuid is not available, please login first')
     }
     return await WizNoteApi.KnowledgeBaseApi.deleteNote({ kbGuid, docGuid })
@@ -205,6 +201,12 @@ class SyncService {
     if (this.isSyncing) {
       console.info('[SyncService] Sync already in progress, skipping')
       return { success: false, reason: 'already_syncing' }
+    }
+
+    const kbGuid = getKbGuid()
+    if (!kbGuid || kbGuid === 'null') {
+      console.warn('[SyncService] Sync skipped: no kbGuid (not logged in or login pending)')
+      return { success: false, reason: 'not_logged_in' }
     }
 
     this.isSyncing = true
@@ -252,7 +254,7 @@ class SyncService {
   async pullFromCloud(since = null) {
     try {
       const kbGuid = getKbGuid()
-      if (!kbGuid) {
+      if (!kbGuid || kbGuid === 'null') {
         console.warn('[SyncService] pullFromCloud skipped: no kbGuid')
         return { count: 0, conflicts: 0 }
       }
@@ -333,15 +335,95 @@ class SyncService {
   /**
    * 上传本地变更到云端
    * 只更新内容，不改变笔记所在文件夹（避免触发为知笔记的移动/删除文件夹逻辑）
+   *
+   * 离线笔记合并规则：
+   * - 纯本地笔记（doc_guid 以 local_ 开头）：当作新建推送到云端
+   * - 同文件夹路径 + 标题：本地覆盖线上（云端直接更新同名笔记）
    */
   async pushToCloud() {
     const pendingNotes = await DatabaseService.getPendingSyncNotes()
     console.log('[SyncService] pushToCloud: found', pendingNotes?.length || 0, 'pending notes')
+    if (pendingNotes.length === 0) {
+      console.log('[SyncService] No pending notes to sync')
+      return { count: 0, errors: 0 }
+    }
     let pushedCount = 0
     let errors = 0
 
     for (const note of pendingNotes) {
+      console.log(`[SyncService] Processing note: id=${note.id}, doc_guid=${note.doc_guid}, title=${note.title}, sync_status=${note.sync_status}`)
       try {
+        // 离线笔记（doc_guid 以 local_ 开头）：当作新建推送到云端
+        // 合并规则：同文件夹路径 + 同标题 → 本地覆盖线上（精确匹配）
+        if (note.doc_guid && note.doc_guid.startsWith('local_')) {
+          console.log('[SyncService] Processing offline note:', note.title, 'category:', note.category)
+          const kbGuid = getKbGuid()
+          let targetDocGuid = null
+
+          try {
+            // 按标题搜索云端笔记
+            const searchResult = await WizNoteApi.KnowledgeBaseApi.searchNote({
+              data: { ss: note.title },
+              kbGuid
+            })
+            if (Array.isArray(searchResult) && searchResult.length > 0) {
+              // 精确匹配：同标题 + 同文件夹路径（category）
+              // 注意：如果搜索结果中有多个同路径同标题的笔记（用户可能离线时在本地创建了重名笔记），
+              // 则不走覆盖逻辑，直接创建新笔记，避免互相覆盖
+              const sameFolderSameTitle = searchResult.filter(doc => {
+                const docCat = (doc.category || '').replace(/\/$/, '')
+                const noteCat = (note.category || '').replace(/\/$/, '')
+                return doc.title === note.title && docCat === noteCat
+              })
+              if (sameFolderSameTitle.length === 1) {
+                targetDocGuid = sameFolderSameTitle[0].guid || sameFolderSameTitle[0].docGuid
+                console.log('[SyncService] Found exactly one cloud note with same title+folder, will update:', targetDocGuid)
+              } else if (sameFolderSameTitle.length > 1) {
+                console.warn('[SyncService] Multiple cloud notes with same title+folder, creating as new to avoid overwrite')
+              } else {
+                console.log('[SyncService] No cloud note with same title+folder, will create new')
+              }
+            }
+          } catch (e) {
+            console.warn('[SyncService] searchNote failed, creating new:', e.message)
+          }
+
+          if (targetDocGuid) {
+            // 精确匹配到 1 个云端笔记 → 本地覆盖线上
+            await api.updateDoc(targetDocGuid, {
+              title: note.title,
+              content: note.content,
+              category: note.category || '/'
+            })
+            await DatabaseService.updateNote(note.id, {
+              doc_guid: targetDocGuid,
+              sync_status: 'synced'
+            })
+            await DatabaseService.createGuidMapping(note.id, targetDocGuid, 'wiznote')
+            pushedCount++
+          } else {
+            // 没有精确匹配（或匹配到多个） → 在云端创建新笔记
+            const result = await api.createDoc({
+              title: note.title,
+              content: note.content,
+              category: note.category || '/'
+            })
+            if (result?.guid) {
+              await DatabaseService.updateNote(note.id, {
+                doc_guid: result.guid,
+                sync_status: 'synced'
+              })
+              await DatabaseService.createGuidMapping(note.id, result.guid, 'wiznote')
+              pushedCount++
+            } else {
+              console.warn('[SyncService] createDoc returned no guid:', result)
+              errors++
+            }
+          }
+          continue
+        }
+
+        // 有 doc_guid 的已同步笔记：更新云端
         if (!note.doc_guid) {
           // 纯本地新建的笔记（无 doc_guid）：尝试在云端创建
           console.log('[SyncService] Creating new note on cloud:', note.title)
@@ -359,8 +441,6 @@ class SyncService {
             pushedCount++
             continue
           } else {
-            // 创建失败，保持 local_only 状态
-            console.warn('[SyncService] createDoc returned no guid:', result)
             errors++
             continue
           }

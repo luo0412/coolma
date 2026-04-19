@@ -282,6 +282,11 @@ module.exports = function (/* ctx */) {
         // ─── 打包完成后裁剪 Electron 多余模块 ───
         afterPack: './scripts/after-pack.js',
 
+        // ─── 7z 极限压缩配置 ───
+        // 底层调用 7z，最高压缩级别 + BCJ2 过滤器（对可执行文件效果显著）
+        // 使用 yarn build-7z 或 yarn build-publish-7z 来触发极限压缩
+        compression: 'maximum',
+
         // ─── 压缩 asar 包 ───
         // asarUnpack 用于将大体积模块解压到外部，asar 保持 true 即可
         asar: true,
@@ -315,6 +320,21 @@ module.exports = function (/* ctx */) {
           // vuepress 相关（完全不需要）
           '!node_modules/vuepress/**/*',
           '!node_modules/vuepress-theme-vdoing/**/*',
+          // ─── 排除 .d.ts .md .map 等无用文件类型 ───
+          // *.d.ts (TypeScript 类型定义，运行时不需要)
+          '!node_modules/**/*.d.ts',
+          // *.md (markdown 文档)
+          '!node_modules/**/*.md',
+          // *.map (source map，调试用，生产不需要)
+          '!node_modules/**/*.map',
+          // CHANGELOG / CONTRIBUTING / TODO 等文档文件变体
+          '!node_modules/**/CHANGELOG*',
+          '!node_modules/**/CONTRIBUTING*',
+          '!node_modules/**/TODO*',
+          '!node_modules/**/LICENSE*',
+          '!node_modules/**/AUTHORS*',
+          '!node_modules/**/HISTORY*',
+          '!node_modules/**/CHANGELELOG*',
           // 其他开发文件
           '!dist/**/*',
           '!.cursor/**/*',

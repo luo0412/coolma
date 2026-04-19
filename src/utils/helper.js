@@ -402,6 +402,7 @@ const updateContentsList = list => {
  * @param {string} childCategory
  */
 function checkCategoryExistence (categories, parentCategory, childCategory) {
+  if (!categories || !Array.isArray(categories)) return false
   parentCategory = isNullOrEmpty(parentCategory) ? '/' : parentCategory
   const absolutePath = `${parentCategory}${childCategory}/`
   return categories.includes(absolutePath)

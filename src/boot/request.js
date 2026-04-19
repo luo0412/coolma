@@ -31,9 +31,14 @@ export async function execRequest (method, url, body = {}, token = null, extraCo
     config.headers = {
       'X-Wiz-Token': token
     }
-  } else if (ServerFileStorage.isKeyExistsInLocalStorage('token')) {
-    config.headers = {
-      'X-Wiz-Token': ServerFileStorage.getValueFromLocalStorage('token')
+  } else {
+    const storedToken = ServerFileStorage.isKeyExistsInLocalStorage('token')
+      ? ServerFileStorage.getValueFromLocalStorage('token')
+      : null
+    if (storedToken) {
+      config.headers = {
+        'X-Wiz-Token': storedToken
+      }
     }
   }
 

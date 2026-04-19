@@ -306,7 +306,7 @@ export default {
       return this.tags?.map(t => t.tagGuid).includes(this.currentCategory)
     },
     showEditorNoteFab: function () {
-      return this.isLogin && !this.noteFabIsTagCategory
+      return (this.isLogin || !this.isLogin) && !this.noteFabIsTagCategory
     },
     ...mapServerGetters(['currentNote', 'currentNoteInfo']),
     ...mapServerState([

@@ -2,6 +2,7 @@ import api from 'src/utils/api'
 import _ from 'lodash'
 import helper from 'src/utils/helper'
 import ServerFileStorage from 'src/utils/storage/ServerFileStorage'
+import { OFFLINE_ROOT_CATEGORY_KEY } from 'src/store/server/actions'
 
 export default {
   avatarUrl: ({ userGuid }) => {
@@ -115,7 +116,10 @@ export default {
     } = currentNote
     return `${api.KnowledgeBaseApi.getBaseUrl()}/${kbGuid}/${docGuid}`
   },
-  categories: ({ categories, categoriesPos }) => {
+  categories: ({ categories, categoriesPos, offlineCategories, isLogin }) => {
+    if (!isLogin) {
+      return offlineCategories.length > 0 ? offlineCategories : []
+    }
     return helper.generateCategoryNodeTree(categories, categoriesPos)
   },
   tags: ({ tags }) => {
@@ -143,5 +147,31 @@ export default {
     if (helper.isNullOrEmpty(currentNote?.info?.tags)) return []
     const tagGuids = currentNote.info.tags.split('*')
     return tags.filter(t => tagGuids.includes(t.tagGuid))
+  },
+  /**
+   * Offline-only notes list (used when not logged in).
+   * Returns raw notes from SQLite with sync_status=local_only,
+   * formatted to match the shape that NoteItem.vue expects.
+   */
+  offlineNotesList: ({ offlineNotes, offlineCurrentCategory }) => {
+    if (!offlineNotes || !offlineNotes.length) return []
+    const category = offlineCurrentCategory || ''
+    let filtered = offlineNotes
+    // offlineCurrentCategory may be a category key (e.g., 'offline_my_notes') or a category path (e.g., '/我的笔记/')
+    // When it's the offline root key, show all local_only notes
+    if (category && category !== OFFLINE_ROOT_CATEGORY_KEY) {
+      filtered = offlineNotes.filter(n => n.category === category)
+    }
+    return filtered.map(note => ({
+      docGuid: note.doc_guid,
+      title: note.title,
+      abstractText: note.content ? note.content.substring(0, 200) : '',
+      category: note.category || '/',
+      dataCreated: note.data_created,
+      dataModified: note.data_modified || note.local_modified || note.data_created,
+      sync_status: note.sync_status,
+      // raw id for offline note lookup
+      _localId: note.id
+    }))
   }
 }

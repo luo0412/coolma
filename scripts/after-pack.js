@@ -57,7 +57,16 @@ module.exports = function afterPack(context) {
     console.log('[afterPack] 已删除 debug.log')
   }
 
-  // ─── 3. 清理 crashpad (生产环境不需要) ───
+  // ─── 3. 清理 unpack 目录中的无用文件类型 ───
+  // asarUnpack 的模块（monaco-editor, echarts, mermaid 等）会解压到 app.asar.unpacked 目录
+  // 这些模块内部仍有 .d.ts .md .map 等无用文件，一并清理
+  const unpackedPath = path.join(resourcesPath, 'app.asar.unpacked')
+  if (fs.existsSync(unpackedPath)) {
+    const result = cleanFileTypes(unpackedPath, ['.d.ts', '.md', '.map', '.ts'])
+    console.log(`[afterPack] unpacked 目录清理: 删除了 ${result.count} 个文件 (${formatSize(result.size)})`)
+  }
+
+  // ─── 4. 清理 crashpad (生产环境不需要) ───
   if (platform === 'mac') {
     const crashpadDir = path.join(resourcesPath, 'crashpad')
     if (fs.existsSync(crashpadDir)) {
@@ -91,6 +100,40 @@ function rmrf(dir) {
     })
     fs.rmdirSync(dir)
   }
+}
+
+function cleanFileTypes(dir, extensions) {
+  let count = 0
+  let size = 0
+
+  function walk(currentDir) {
+    if (!fs.existsSync(currentDir)) return
+    const entries = fs.readdirSync(currentDir, { withFileTypes: true })
+    for (const entry of entries) {
+      const fullPath = path.join(currentDir, entry.name)
+      if (entry.isDirectory()) {
+        walk(fullPath)
+        // 如果目录清空后为空，也尝试删除（但保留 node_modules 结构）
+        const remaining = fs.readdirSync(fullPath)
+        if (remaining.length === 0 && !fullPath.endsWith('node_modules')) {
+          try { fs.rmdirSync(fullPath) } catch (_) {}
+        }
+      } else if (entry.isFile()) {
+        const ext = path.extname(entry.name)
+        if (extensions.includes(ext) || extensions.includes(entry.name)) {
+          try {
+            const stat = fs.statSync(fullPath)
+            size += stat.size
+            fs.unlinkSync(fullPath)
+            count++
+          } catch (_) {}
+        }
+      }
+    }
+  }
+
+  walk(dir)
+  return { count, size }
 }
 
 function formatSize(bytes) {

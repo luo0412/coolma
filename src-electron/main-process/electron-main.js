@@ -60,9 +60,9 @@ function execOne(sql, params = []) {
 /**
  * sql.js 执行语句
  */
-function execRun(sql, params = []) {
+async function execRun(sql, params = []) {
   try {
-    db.run(sql, params)
+    await db.run(sql, params)
     saveDatabase()
     return { changes: db.getRowsModified(), lastInsertRowid: getLastInsertRowid() }
   } catch (error) {
@@ -239,6 +239,41 @@ function initSchema() {
     )
   `)
 
+  // 符文卡片表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS runes (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      "desc" TEXT,
+      power INTEGER DEFAULT 50,
+      color TEXT DEFAULT '#7E57C2',
+      icon TEXT DEFAULT 'auto_awesome',
+      template TEXT,
+      created_at INTEGER,
+      updated_at INTEGER
+    )
+  `)
+
+  // 初始化默认符文数据（仅当表为空时）
+  const count = execOne('SELECT COUNT(*) as count FROM runes')
+  if (count && count.count === 0) {
+    const now = Date.now()
+    const defaultRunes = [
+      { id: 'rune-1', name: '火焰之魂', desc: '释放灼烧伤害，持续灼烧敌人', power: 85, color: '#FF6B35', icon: 'whatshot' },
+      { id: 'rune-2', name: '寒冰护盾', desc: '生成冰霜护盾，减免30%伤害', power: 72, color: '#4FC3F7', icon: 'ac_unit' },
+      { id: 'rune-3', name: '雷霆一击', desc: '召唤雷电攻击，造成群体眩晕', power: 95, color: '#AB47BC', icon: 'flash_on' },
+      { id: 'rune-4', name: '生命汲取', desc: '攻击时恢复自身生命值', power: 60, color: '#66BB6A', icon: 'favorite' },
+      { id: 'rune-5', name: '暗影之刃', desc: '提升暴击率与移动速度', power: 78, color: '#7E57C2', icon: 'nights_stay' },
+      { id: 'rune-6', name: '圣光庇护', desc: '免疫一次负面效果并治疗', power: 88, color: '#FFD54F', icon: 'wb_sunny' }
+    ]
+    for (const r of defaultRunes) {
+      db.run(`INSERT INTO runes (id, name, "desc", power, color, icon, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [r.id, r.name, r.desc, r.power, r.color, r.icon, now, now])
+    }
+    saveDatabase()
+    log.info('[DB] Default runes seeded')
+  }
+
   log.info('[Main] Database schema initialized')
 }
 
@@ -310,7 +345,7 @@ function registerDatabaseHandlers() {
       const toStr = (v) => (v == null) ? '' : (typeof v === 'string') ? v : (typeof v === 'number') ? String(v) : JSON.stringify(v)
       const toNum = (v) => (v == null) ? now : (typeof v === 'number') ? v : parseInt(v, 10) || now
       const toStrOrNull = (v) => (v == null) ? null : (typeof v === 'string') ? v : (typeof v === 'number') ? String(v) : JSON.stringify(v)
-      db.run(`
+      await db.run(`
         INSERT INTO notes (doc_guid, title, content, category, tags, data_created, data_modified, sync_status, local_modified, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
@@ -326,9 +361,24 @@ function registerDatabaseHandlers() {
         now,
         now
       ])
+      // 保存到文件（sql.js 是 auto-commit，不需要手动 COMMIT）
       saveDatabase()
       const lastId = getLastInsertRowid()
-      return execOne('SELECT * FROM notes WHERE id = ?', [lastId])
+      if (!lastId && lastId !== 0) {
+        log.error('[DB] createNote: getLastInsertRowid returned null')
+        return null
+      }
+      let createdNote = execOne('SELECT * FROM notes WHERE id = ?', [lastId])
+      if (!createdNote && note.doc_guid) {
+        // lastId 为 0 时（sql.js WAL 模式偶发），回退按 doc_guid 查询
+        log.warn('[DB] createNote: lastId=0, falling back to doc_guid query')
+        createdNote = execOne('SELECT * FROM notes WHERE doc_guid = ?', [note.doc_guid])
+      }
+      if (!createdNote) {
+        log.error('[DB] createNote: SELECT after insert returned null for id:', lastId)
+        return null
+      }
+      return createdNote
     } catch (error) {
       log.error('[DB] createNote error:', error)
       log.error('[DB] createNote note object keys:', Object.keys(note || {}))
@@ -380,12 +430,12 @@ function registerDatabaseHandlers() {
       values.push(id)
 
       const query = `UPDATE notes SET ${fields.join(', ')} WHERE id = ?`
-      db.run(query, values)
+      await db.run(query, values)
       saveDatabase()
 
       // 记录同步日志
       if (updates.sync_status !== undefined) {
-        db.run(`INSERT INTO sync_log (note_id, action, direction, timestamp, synced) VALUES (?, 'update', 'local_to_server', ?, 0)`, [id, now])
+        await db.run(`INSERT INTO sync_log (note_id, action, direction, timestamp, synced) VALUES (?, 'update', 'local_to_server', ?, 0)`, [id, now])
         saveDatabase()
       }
 
@@ -400,8 +450,8 @@ function registerDatabaseHandlers() {
   // 删除笔记
   ipcMain.handle('db:deleteNote', async (event, id) => {
     try {
-      db.run(`INSERT INTO sync_log (note_id, action, direction, timestamp, synced) VALUES (?, 'delete', 'local_to_server', ?, 0)`, [id, Date.now()])
-      db.run('DELETE FROM notes WHERE id = ?', [id])
+      await db.run(`INSERT INTO sync_log (note_id, action, direction, timestamp, synced) VALUES (?, 'delete', 'local_to_server', ?, 0)`, [id, Date.now()])
+      await db.run('DELETE FROM notes WHERE id = ?', [id])
       saveDatabase()
       return true
     } catch (error) {
@@ -453,7 +503,7 @@ function registerDatabaseHandlers() {
   ipcMain.handle('db:createTag', async (event, tag) => {
     try {
       const now = Date.now()
-      db.run(`INSERT INTO tags (name, color, created_at) VALUES (?, ?, ?)`, [tag.name, tag.color || '#1890ff', now])
+      await db.run(`INSERT INTO tags (name, color, created_at) VALUES (?, ?, ?)`, [tag.name, tag.color || '#1890ff', now])
       saveDatabase()
       const lastId = getLastInsertRowid()
       return { id: lastId, name: tag.name, color: tag.color || '#1890ff', created_at: now }
@@ -466,7 +516,7 @@ function registerDatabaseHandlers() {
   // 删除标签
   ipcMain.handle('db:deleteTag', async (event, id) => {
     try {
-      db.run('DELETE FROM tags WHERE id = ?', [id])
+      await db.run('DELETE FROM tags WHERE id = ?', [id])
       saveDatabase()
       return true
     } catch (error) {
@@ -482,13 +532,13 @@ function registerDatabaseHandlers() {
       if (!note) return false
 
       // 备份到冲突表
-      db.run(`
+      await db.run(`
         INSERT INTO conflict_backup (note_id, local_content, server_content, local_modified, server_modified)
         VALUES (?, ?, ?, ?, ?)
       `, [id, note.content, serverData.content || '', note.local_modified, serverData.data_modified || null])
 
       // 更新状态为冲突
-      db.run(`UPDATE notes SET sync_status = 'conflict', updated_at = ? WHERE id = ?`, [Date.now(), id])
+      await db.run(`UPDATE notes SET sync_status = 'conflict', updated_at = ? WHERE id = ?`, [Date.now(), id])
       saveDatabase()
       return true
     } catch (error) {
@@ -500,7 +550,7 @@ function registerDatabaseHandlers() {
   // 记录同步操作日志
   ipcMain.handle('db:logSyncAction', async (event, { noteId, action, direction }) => {
     try {
-      db.run(`INSERT INTO sync_log (note_id, action, direction, timestamp, synced) VALUES (?, ?, ?, ?, 0)`,
+      await db.run(`INSERT INTO sync_log (note_id, action, direction, timestamp, synced) VALUES (?, ?, ?, ?, 0)`,
         [noteId, action, direction, Date.now()])
       saveDatabase()
       return true
@@ -533,7 +583,7 @@ function registerDatabaseHandlers() {
   // 创建 GUID 映射
   ipcMain.handle('db:createGuidMapping', async (event, { localId, serverGuid, service = 'wiznote' }) => {
     try {
-      db.run(`INSERT OR REPLACE INTO guid_mapping (local_id, server_guid, service, created_at) VALUES (?, ?, ?, ?)`,
+      await db.run(`INSERT OR REPLACE INTO guid_mapping (local_id, server_guid, service, created_at) VALUES (?, ?, ?, ?)`,
         [localId, serverGuid, service, Date.now()])
       saveDatabase()
       return true
@@ -546,14 +596,73 @@ function registerDatabaseHandlers() {
   // 重置数据库（清空所有本地笔记，重置同步状态）
   ipcMain.handle('db:resetDatabase', async () => {
     try {
-      db.run('DELETE FROM notes')
-      db.run('DELETE FROM guid_mapping')
-      db.run('DELETE FROM sync_log')
+      await db.run('DELETE FROM notes')
+      await db.run('DELETE FROM guid_mapping')
+      await db.run('DELETE FROM sync_log')
       saveDatabase()
       log.info('[DB] Database reset successfully')
       return true
     } catch (error) {
       log.error('[DB] resetDatabase error:', error)
+      return false
+    }
+  })
+
+  // 获取所有符文
+  ipcMain.handle('db:getRunes', async () => {
+    try {
+      return execToObjects('SELECT * FROM runes ORDER BY created_at ASC')
+    } catch (error) {
+      log.error('[DB] getRunes error:', error)
+      return []
+    }
+  })
+
+  // 创建或更新符文
+  ipcMain.handle('db:saveRune', async (event, rune) => {
+    try {
+      const now = Date.now()
+      const existing = execOne('SELECT id FROM runes WHERE id = ?', [rune.id])
+      if (existing) {
+        await db.run(`UPDATE runes SET name = ?, "desc" = ?, power = ?, color = ?, icon = ?, template = ?, updated_at = ? WHERE id = ?`, [
+          rune.name, rune.desc || '', rune.power || 50, rune.color || '#7E57C2', rune.icon || 'auto_awesome', rune.template || '', now, rune.id
+        ])
+      } else {
+        await db.run(`INSERT INTO runes (id, name, "desc", power, color, icon, template, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [rune.id, rune.name, rune.desc || '', rune.power || 50, rune.color || '#7E57C2', rune.icon || 'auto_awesome', rune.template || '', now, now])
+      }
+      saveDatabase()
+      return execOne('SELECT * FROM runes WHERE id = ?', [rune.id])
+    } catch (error) {
+      log.error('[DB] saveRune error:', error)
+      return null
+    }
+  })
+
+  // 删除符文
+  ipcMain.handle('db:deleteRune', async (event, id) => {
+    try {
+      await db.run('DELETE FROM runes WHERE id = ?', [id])
+      saveDatabase()
+      return true
+    } catch (error) {
+      log.error('[DB] deleteRune error:', error)
+      return false
+    }
+  })
+
+  // 批量保存符文（用于排序更新）
+  ipcMain.handle('db:saveRunes', async (event, runes) => {
+    try {
+      const now = Date.now()
+      for (const rune of runes) {
+        await db.run(`INSERT OR REPLACE INTO runes (id, name, "desc", power, color, icon, template, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [rune.id, rune.name, rune.desc || '', rune.power || 50, rune.color || '#7E57C2', rune.icon || 'auto_awesome', rune.template || '', rune.created_at || now, now])
+      }
+      saveDatabase()
+      return true
+    } catch (error) {
+      log.error('[DB] saveRunes error:', error)
       return false
     }
   })

@@ -31,6 +31,13 @@
             class="node-label"
             :style="isNodeSelected(node) ? 'color: var(--themeColor)' : ''"
           >{{ node.label }}</span>
+          <q-badge
+            v-if="node.data && node.data.isOfflineRoot"
+            color="grey-5"
+            text-color="grey-8"
+            :label="offlineNoteCount"
+            class="offline-badge"
+          />
         </span>
       </el-tree>
     </q-scroll-area>
@@ -135,8 +142,14 @@ export default {
         label: 'label'
       }
     },
+    offlineNoteCount () {
+      if (!this.isLogin && this.offlineNotes && this.offlineNotes.length > 0) {
+        return this.offlineNotes.length
+      }
+      return null
+    },
     ...mapServerGetters(['categories', 'tags']),
-    ...mapServerState(['currentCategory', 'tagNotesCount']),
+    ...mapServerState(['currentCategory', 'tagNotesCount', 'isLogin', 'offlineNotes']),
     ...mapClientState(['rightClickCategoryItem', 'sidebarTreeType'])
   },
   methods: {
@@ -145,7 +158,11 @@ export default {
 
       const isExpanded = node.expanded
       const isSelected = this.currentCategory === node.key
+      const isOfflineRoot = node.data && node.data.isOfflineRoot
 
+      if (isOfflineRoot) {
+        return isSelected || isExpanded ? 'el-icon-notebook-2' : 'el-icon-notebook-2'
+      }
       if (isSelected || isExpanded) {
         return 'el-icon-folder-opened'
       }
@@ -441,6 +458,16 @@ export default {
       text-overflow: ellipsis;
       white-space: nowrap;
       color: inherit;
+    }
+
+    .offline-badge {
+      margin-left: 4px;
+      font-size: 10px;
+      height: 16px;
+      min-width: 16px;
+      padding: 0 4px;
+      line-height: 16px;
+      border-radius: 8px;
     }
   }
 }

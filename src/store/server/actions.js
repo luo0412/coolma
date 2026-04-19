@@ -1,6 +1,13 @@
 import types from 'src/store/server/types'
 import api from 'src/utils/api'
 import DatabaseClient from 'src/utils/DatabaseClient'
+import bus from 'src/components/bus'
+
+/** 离线根目录的 category key */
+export const OFFLINE_ROOT_CATEGORY_KEY = 'offline_my_notes'
+
+/** 离线根目录 category 值（存入 notes.category 字段） */
+export const OFFLINE_ROOT_CATEGORY = '/我的笔记/'
 
 /** 日历列表/打点用时间戳；创建日优先 dataCreated（与 Wiz 列表字段一致），缺省回退修改日 */
 function getCalendarNoteTimestamp (note, basis) {
@@ -126,6 +133,51 @@ export default {
         password,
         url
       })
+    } else {
+      this.dispatch('server/initOfflineMode')
+    }
+  },
+  /**
+   * Initialize offline mode: load local-only notes from SQLite and build
+   * the offline category tree (single root node "我的笔记").
+   * Called after skip-login so the user can create/view notes without account.
+   */
+  async initOfflineMode ({ commit, state }) {
+    try {
+      const localNotes = await DatabaseClient.getNotes({ syncStatus: 'local_only' })
+      console.log('[initOfflineMode] loaded local_only notes:', localNotes.length)
+
+      commit(types.SET_OFFLINE_NOTES, localNotes || [])
+
+      const offlineRoot = {
+        label: '我的笔记',
+        key: OFFLINE_ROOT_CATEGORY_KEY,
+        children: [],
+        selectable: true,
+        isOfflineRoot: true
+      }
+      commit(types.SET_OFFLINE_CATEGORIES, [offlineRoot])
+      commit(types.UPDATE_CURRENT_CATEGORY, OFFLINE_ROOT_CATEGORY_KEY)
+      commit(types.SET_OFFLINE_CURRENT_CATEGORY, OFFLINE_ROOT_CATEGORY_KEY)
+
+      return localNotes || []
+    } catch (err) {
+      console.error('[initOfflineMode] failed:', err)
+      return []
+    }
+  },
+  /**
+   * Update offline current category and refresh offline notes list.
+   */
+  async updateOfflineCurrentCategory ({ commit, state }, payload) {
+    const { data } = payload
+    commit(types.SET_OFFLINE_CURRENT_CATEGORY, data)
+    // Re-fetch offline notes to ensure we have the latest
+    try {
+      const localNotes = await DatabaseClient.getNotes({ syncStatus: 'local_only' })
+      commit(types.SET_OFFLINE_NOTES, localNotes || [])
+    } catch (err) {
+      console.warn('[updateOfflineCurrentCategory] failed to refresh notes:', err)
     }
   },
   async getContent (payload, {
@@ -179,6 +231,21 @@ export default {
       ...result,
       isLogin: true
     })
+
+    // 检查是否有离线笔记需要同步
+    try {
+      const pendingNotes = await DatabaseClient.getNotes({ syncStatus: 'local_only' })
+      const offlineNotes = pendingNotes.filter(n => n.doc_guid && n.doc_guid.startsWith('local_'))
+      if (offlineNotes.length > 0) {
+        console.log('[login] Found', offlineNotes.length, 'offline notes to sync')
+        commit(types.SET_OFFLINE_NOTES, offlineNotes)
+        // 通过 bus 事件通知 App.vue 显示同步提示弹窗
+        bus.$emit('showOfflineSyncPrompt', offlineNotes)
+      }
+    } catch (err) {
+      console.warn('[login] Failed to check offline notes:', err)
+    }
+
     this.dispatch('server/getAllTags')
     this.dispatch('server/getAllCategories')
     this.dispatch('server/getCategoryNotes')
@@ -434,7 +501,36 @@ export default {
     const { docGuid } = payload
     console.time('GetContent')
 
-    // 始终先查 SQLite，有就直接用（本地永远优先）
+    // 离线笔记（未登录 且 (无 docGuid 或 docGuid 以 local_ 开头））：从 SQLite 加载
+    if (!state.isLogin && (!docGuid || docGuid.startsWith('local_'))) {
+      console.log('[getNoteContent] Offline mode, loading from SQLite:', docGuid)
+      try {
+        const localNote = await DatabaseClient.getNoteByDocGuid(docGuid)
+        if (localNote) {
+          commit(types.UPDATE_CURRENT_NOTE, {
+            _isRawMarkdown: true,
+            info: {
+              docGuid: localNote.doc_guid,
+              kbGuid: '',
+              title: localNote.title,
+              category: localNote.category || OFFLINE_ROOT_CATEGORY,
+              dataCreated: localNote.data_created,
+              dataModified: localNote.data_modified || localNote.local_modified
+            },
+            html: localNote.content || '',
+            resources: []
+          })
+          commit(types.UPDATE_CURRENT_NOTE_LOADING_STATE, false)
+          return
+        }
+      } catch (err) {
+        console.warn('[getNoteContent] SQLite lookup failed for offline note:', err)
+      }
+      commit(types.UPDATE_CURRENT_NOTE_LOADING_STATE, false)
+      return
+    }
+
+    // 已登录：从 SQLite 优先读取，本地没有才请求云端
     let result
     try {
       const localNote = await DatabaseClient.getNoteByDocGuid(docGuid)
@@ -516,13 +612,22 @@ export default {
    * @param category
    * @returns {Promise<void>}
    */
-  async updateCurrentCategory ({ commit }, payload) {
+  async updateCurrentCategory ({ commit, state }, payload) {
     const {
       type,
       data
     } = payload
     commit(types.UPDATE_CURRENT_CATEGORY, data)
     commit(types.SAVE_TO_LOCAL_STORE_SYNC, ['currentCategory', data])
+
+    // 离线模式：从 SQLite 过滤本地笔记
+    if (!state.isLogin || !state.kbGuid) {
+      commit(types.UPDATE_CURRENT_NOTES, [])
+      // offlineNotes 已经在 initOfflineMode 时加载到 state.offlineNotes
+      // 组件通过 offlineNotesList getter 获取过滤后的列表
+      return
+    }
+
     if (type === 'category') {
       await this.dispatch('server/getCategoryNotes', { category: data })
     } else if (type === 'tag') {
@@ -571,6 +676,33 @@ export default {
       docGuid,
       category
     } = state.currentNote.info
+
+    // 离线笔记（docGuid 以 local_ 开头）：仅保存到 SQLite，不推云端
+    // 注意：必须同时检查 !state.isLogin，因为 login 后 kbGuid 被设置了，!kbGuid 会变成 false
+    if (!state.isLogin && docGuid && docGuid.startsWith('local_')) {
+      const { title } = state.currentNote.info
+      try {
+        const localNote = await DatabaseClient.getNoteByDocGuid(docGuid)
+        if (localNote) {
+          await DatabaseClient.updateNote(localNote.id, {
+            title,
+            content: markdown,
+            category: OFFLINE_ROOT_CATEGORY,
+            sync_status: 'local_only'
+          })
+          console.log('[updateNote/offline] SQLite updated:', docGuid)
+        } else {
+          console.warn('[updateNote/offline] Note not found in SQLite:', docGuid)
+        }
+      } catch (err) {
+        console.error('[updateNote/offline] SQLite write failed:', err)
+      }
+      // 离线笔记保存在 SQLite，增量更新 offlineNotes 中该笔记的内容
+      const localNotes = await DatabaseClient.getNotes({ syncStatus: 'local_only' })
+      commit(types.SET_OFFLINE_NOTES, localNotes || [])
+      commit(types.UPDATE_NOTE_STATE, 'default')
+      return
+    }
     if (state.noteState === 'default' || state.noteState === 'none') return
     let { title } = state.currentNote.info
     const { resources } = state.currentNote
@@ -697,12 +829,75 @@ export default {
   }, title) {
     const {
       kbGuid,
-      currentCategory = ''
+      currentCategory = '',
+      isLogin
     } = state
     const userId = ClientFileStorage.getItemFromStore('userId')
-    const isLite = currentCategory.replace(/\//g, '') === 'Lite'
+    const safeCategory = currentCategory || ''
+    const isLite = safeCategory.replace(/\//g, '') === 'Lite'
     const initialContent = `# ${title}`
     const now = Date.now()
+
+    // 如果未登录，仅在本地 SQLite 创建，不推云端
+    if (!isLogin) {
+      // 生成一个本地 GUID（uuid 格式）用于标识离线笔记
+      const localDocGuid = `local_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`
+      let note = null
+      try {
+        note = await DatabaseClient.createNote({
+          doc_guid: localDocGuid,
+          title,
+          content: initialContent,
+          category: OFFLINE_ROOT_CATEGORY,
+          data_created: now,
+          data_modified: now,
+          local_modified: now,
+          sync_status: 'local_only'
+        })
+      } catch (err) {
+        console.error('[createNote/offline] SQLite create failed:', err)
+        Notify.create({
+          message: i18n.t('createNoteFailed'),
+          type: 'negative',
+          icon: 'error'
+        })
+        return
+      }
+      if (!note) {
+        console.error('[createNote/offline] SQLite create returned null')
+        Notify.create({
+          message: i18n.t('createNoteFailed'),
+          type: 'negative',
+          icon: 'error'
+        })
+        return
+      }
+      // 重新加载离线笔记列表
+      const localNotes = await DatabaseClient.getNotes({ syncStatus: 'local_only' })
+      commit(types.SET_OFFLINE_NOTES, localNotes || [])
+      // 显示本地草稿内容
+      commit(types.UPDATE_CURRENT_NOTE, {
+        _isRawMarkdown: true,
+        info: {
+          docGuid: localDocGuid,
+          kbGuid: '',
+          title,
+          category: OFFLINE_ROOT_CATEGORY,
+          dataCreated: now,
+          dataModified: now
+        },
+        html: initialContent,
+        resources: []
+      })
+      Notify.create({
+        message: i18n.t('saveNoteSuccessfully'),
+        type: 'positive',
+        icon: 'check'
+      })
+      return
+    }
+
+    // 以下为已登录逻辑（原逻辑）
 
     // Step 1: 先在本地 SQLite 创建草稿（sync_status=local_only）
     let localNoteId = null
@@ -809,7 +1004,8 @@ export default {
   async updateNoteWithInfo ({ commit }, { markdown, noteInfo }) {
     if (!noteInfo) return
     const { kbGuid, docGuid, title, category = '/', resources = [] } = noteInfo
-    if (!docGuid || !kbGuid) return
+    // 离线笔记不推云端，只写 SQLite
+    if (!docGuid || !kbGuid || (docGuid && docGuid.startsWith('local_'))) return
 
     const isLite = category.replace(/\//g, '') === 'Lite'
     const html = helper.embedMDNote(markdown, resources, {
@@ -890,7 +1086,8 @@ export default {
   }, importFile) {
     const {
       kbGuid,
-      currentCategory = ''
+      currentCategory = '',
+      isLogin
     } = state
     const title = importFile.name
     const userId = ClientFileStorage.getItemFromStore('userId')
@@ -900,6 +1097,43 @@ export default {
     reader.onload = async () => {
       const text = reader.result
       const now = Date.now()
+
+      // 离线导入：仅写入本地 SQLite，不推云端
+      if (!isLogin) {
+        const localDocGuid = `local_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`
+        try {
+          const note = await DatabaseClient.createNote({
+            doc_guid: localDocGuid,
+            title,
+            content: text,
+            category: OFFLINE_ROOT_CATEGORY,
+            data_created: now,
+            data_modified: now,
+            local_modified: now,
+            sync_status: 'local_only'
+          })
+          if (note) {
+            const localNotes = await DatabaseClient.getNotes({ syncStatus: 'local_only' })
+            commit(types.SET_OFFLINE_NOTES, localNotes || [])
+          }
+          commit(types.UPDATE_CURRENT_NOTE, {
+            _isRawMarkdown: true,
+            info: {
+              docGuid: localDocGuid,
+              kbGuid: '',
+              title,
+              category: OFFLINE_ROOT_CATEGORY,
+              dataCreated: now,
+              dataModified: now
+            },
+            html: text,
+            resources: []
+          })
+        } catch (err) {
+          console.warn('[importNote/offline] SQLite create failed:', err)
+        }
+        return
+      }
 
       // Step 1: 先写入本地 SQLite（sync_status=local_only）
       let localNoteId = null
@@ -991,6 +1225,31 @@ export default {
       kbGuid,
       docGuid
     } = payload
+
+    // 离线笔记删除：直接删除本地记录，不推云端
+    if (docGuid && docGuid.startsWith('local_')) {
+      try {
+        const localNote = await DatabaseClient.getNoteByDocGuid(docGuid)
+        if (localNote) {
+          await DatabaseClient.deleteNote(localNote.id)
+          this.dispatch('offline/deleteNote', localNote.id, { root: true })
+        }
+        // 刷新离线笔记列表
+        const localNotes = await DatabaseClient.getNotes({ syncStatus: 'local_only' })
+        commit(types.SET_OFFLINE_NOTES, localNotes || [])
+      } catch (err) {
+        console.warn('[deleteNote/offline] SQLite delete failed:', err)
+      }
+      if (state.currentNote && state.currentNote.info && state.currentNote.info.docGuid === docGuid) {
+        commit(types.CLEAR_CURRENT_NOTE)
+      }
+      Notify.create({
+        color: 'red-10',
+        message: i18n.t('deleteNoteSuccessfully'),
+        icon: 'delete'
+      })
+      return
+    }
 
     // Step 1: 先在本地 SQLite 标记删除（软删，本地记录保留但标记为 deleted）
     // 注意：当前 schema 没有 deleted 字段，这里直接物理删除本地记录

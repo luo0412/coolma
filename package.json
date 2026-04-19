@@ -16,7 +16,9 @@
     "build-develop": "quasar build -m electron -d",
     "build-publish": "quasar build -m electron -P always",
     "build-all": "quasar build -m electron -T all -P",
-    "build": "quasar build -m electron"
+    "build": "quasar build -m electron",
+    "build-7z": "cross-env ELECTRON_BUILDER_COMPRESSION_LEVEL=9 ELECTRON_BUILDER_7Z_FILTER=bcj2 quasar build -m electron",
+    "build-7z-develop": "cross-env ELECTRON_BUILDER_COMPRESSION_LEVEL=9 ELECTRON_BUILDER_7Z_FILTER=bcj2 quasar build -m electron -d"
   },
   "dependencies": {
     "@altairwei/wiz-markdown": "^1.0.13",
@@ -95,6 +97,7 @@
     "@electron/rebuild": "^4.0.3",
     "@quasar/app": "^2.0.0",
     "babel-eslint": "^10.0.1",
+    "cross-env": "^10.1.0",
     "electron": "^41.0.3",
     "electron-builder": "^26.8.2",
     "electron-rebuild": "^3.2.9",

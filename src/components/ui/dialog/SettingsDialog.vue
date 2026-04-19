@@ -274,7 +274,7 @@
     <ImageUploadServiceDialog ref='imageUploadServiceDialog' />
     <UpdateDialog ref='updateDialog' />
     <RuneFormDialog
-      ref='runeFormDialog'
+      v-model='runeFormVisible'
       :rune='editingRune'
       @submit='onRuneSubmit'
     />
@@ -293,6 +293,7 @@ import events from 'src/constants/events'
 import { version } from '../../../../package.json'
 import { checkUpdate, needUpdate, openLogFiles, openThemeFolder, refreshThemeFolder } from 'src/ApiInvoker'
 import helper from 'src/utils/helper'
+import DatabaseService from 'src/services/DatabaseService'
 
 const {
   mapState,
@@ -327,6 +328,7 @@ export default {
       ],
       version: version,
       checkingNotify: null,
+      runeFormVisible: false,
       editingRune: null,
       dragFromIndex: null
     }
@@ -546,7 +548,7 @@ export default {
       })
     },
     onRuneSortEnd: function () {
-      this.updateStateAndStore({ runeCards: this.localRuneCards })
+      this.saveRunes(this.localRuneCards)
     },
     onDragStart: function (e, index) {
       this.dragFromIndex = index
@@ -572,6 +574,7 @@ export default {
       const [moved] = cards.splice(fromIndex, 1)
       cards.splice(toIndex, 0, moved)
       this.updateStateAndStore({ runeCards: cards })
+      this.saveRunes(cards)
     },
     onDragEnd: function (e) {
       const wrapper = e.target.closest('.rune-card-wrapper')
@@ -583,41 +586,45 @@ export default {
     },
     openEditRune: function (rune) {
       this.editingRune = { ...rune }
-      this.$nextTick(() => {
-        this.$refs.runeFormDialog.$refs.dialog.show()
-      })
+      this.runeFormVisible = true
     },
     openAddRune: function () {
       this.editingRune = null
-      this.$nextTick(() => {
-        this.$refs.runeFormDialog.$refs.dialog.show()
-      })
+      this.runeFormVisible = true
     },
-    confirmDeleteRune: function (rune) {
+    confirmDeleteRune: async function (rune) {
       this.$q.dialog({
         title: this.$t('runeCardDelete'),
         message: this.$t('runeCardDeleteConfirm'),
-        cancel: true,
+        cancel: { label: this.$t('cancel') },
         persistent: true
-      }).onOk(() => {
+      }).onOk(async () => {
+        await this.deleteRune(rune.id)
         const filtered = this.localRuneCards.filter(r => r.id !== rune.id)
         this.updateStateAndStore({ runeCards: filtered })
       })
     },
-    onRuneSubmit: function (data) {
-      const cards = [...this.localRuneCards]
-      const idx = cards.findIndex(r => r.id === data.id)
-      if (idx >= 0) {
-        cards.splice(idx, 1, data)
-      } else {
-        cards.push(data)
+    onRuneSubmit: async function (data) {
+      const saved = await this.saveRune(data)
+      if (saved) {
+        const cards = [...this.localRuneCards]
+        const idx = cards.findIndex(r => r.id === data.id)
+        if (idx >= 0) {
+          cards.splice(idx, 1, saved)
+        } else {
+          cards.push(saved)
+        }
+        this.updateStateAndStore({ runeCards: cards })
       }
-      this.updateStateAndStore({ runeCards: cards })
       this.editingRune = null
     },
     ...mapActions([
       'toggleChanged',
-      'updateStateAndStore'
+      'updateStateAndStore',
+      'loadRunes',
+      'saveRune',
+      'deleteRune',
+      'saveRunes'
     ]),
     ...mapOfflineActions(['sync', 'refresh'])
   },
@@ -625,6 +632,7 @@ export default {
     bus.$on(events.UPDATE_EVENTS.updateAvailable, this.updateAvailableHandler)
     bus.$on(events.UPDATE_EVENTS.updateNotAvailable, this.updateUnavailableHandler)
     bus.$on(events.UPDATE_EVENTS.updateError, this.updateErrorHandler)
+    this.loadRunes()
   },
   beforeDestroy () {
     bus.$off(events.UPDATE_EVENTS.updateAvailable)

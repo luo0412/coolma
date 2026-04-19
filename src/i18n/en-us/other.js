@@ -12,6 +12,12 @@ export default {
   lockModeOff: 'Keyboard Unlocked',
   title: 'Title',
   confirm: 'Confirm',
+  cancel: 'Cancel',
+  ok: 'OK',
+  resetRankingConfirmTitle: 'Confirm Reset',
+  resetRankingConfirmMessage: 'Are you sure you want to reset the ranking?\nThis will clear all tier settings and remove all images. This action cannot be undone.',
+  resetRankingConfirm: 'Confirm Reset',
+  resetRankingCancel: 'Cancel',
   mindmap: 'Mindmap',
   wordCount: 'Word Count',
   'word:': 'Words: {word}',
@@ -45,5 +51,15 @@ export default {
   syncFailed: 'Sync Failed',
   pendingSync: '{count} pending',
   noPendingSync: 'No pending sync',
-  clickToSync: 'Click to sync'
+  clickToSync: 'Click to sync',
+
+  // Offline notes sync
+  offlineNotesFound: 'Offline Notes Found',
+  offlineNotesFoundHint: '{count} note(s) created while offline. Would you like to sync them now?',
+  offlineNotesMore: '...and {count} more',
+  mergeRuleTitle: 'Sync Rule',
+  mergeRuleLocalOverride: 'Same title + folder: local overwrites cloud. No match: create as new note. Multiple same-name notes: each creates a new note, no overwriting.',
+  syncNow: 'Sync Now',
+  skipSync: 'Skip',
+  myNotes: 'My Notes'
 }
