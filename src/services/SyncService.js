@@ -7,6 +7,19 @@ import DatabaseService from './DatabaseService'
 import WizNoteApi from '../utils/api'
 import helper from '../utils/helper'
 
+/** 离线根目录 category 值（存入 notes.category 字段） */
+const OFFLINE_ROOT_CATEGORY = '/我的笔记/'
+
+/**
+ * 规范化笔记分类：离线笔记（'/我的笔记/'）转为根目录 '/'；其余原样返回
+ */
+function normalizeCategory (cat) {
+  if (!cat || cat === OFFLINE_ROOT_CATEGORY || cat === "OFFLINE_ROOT_CATEGORY") {
+    return '/'
+  }
+  return cat
+}
+
 /**
  * 获取当前 kbGuid（从 localStorage 读取）
  */
@@ -77,7 +90,8 @@ const api = {
 
   /**
    * 创建云端笔记
-   * 将 markdown 内容用 embedMDNote 包装为为知笔记接受的 html 格式
+   * 采用单步创建（带 html 内容），与 actions.js 中已登录 createNote 保持一致
+   * 离线笔记合并规则：上传到根目录 '/'
    */
   async createDoc(note) {
     const kbGuid = getKbGuid()
@@ -85,36 +99,36 @@ const api = {
       throw new Error('[SyncService] kbGuid is not available, please login first')
     }
 
-    // 先创建笔记壳，获取 docGuid
-    const result = await WizNoteApi.KnowledgeBaseApi.createNote({
+    const userId = localStorage.getItem('userId') || ''
+    const isLite = (note.category || '').replace(/\//g, '') === 'Lite'
+    // 离线笔记同步时：normalizeCategory 将 '/我的笔记/' 转为 '/'，其余原样保留
+    const category = normalizeCategory(note.category)
+    // 服务器不接受 '/' 作为合法分类，根目录应省略 category 参数
+    const html = helper.embedMDNote(note.content || '', [], {
+      wrapWithPreTag: isLite,
       kbGuid,
-      data: {
-        title: note.title || 'Untitled',
-        category: note.category || '/',
-        tags: note.tags || []
-      }
+      docGuid: '' // 单步创建时 docGuid 为空，embedMDNote 内部会跳过资源替换
     })
 
-    // execRequest 已解包，result 直接是创建结果
+    const createData = {
+      kbGuid,
+      title: note.title || 'Untitled',
+      owner: userId,
+      html,
+      type: isLite ? 'lite/markdown' : 'document'
+    }
+    // 只有非根目录才传 category，避免服务器拒绝 category: '/' 的请求
+    if (category && category !== '/') {
+      createData.category = category
+    }
+
+    const result = await WizNoteApi.KnowledgeBaseApi.createNote({
+      kbGuid,
+      data: createData
+    })
+
     if (result && result.guid) {
-      const docGuid = result.guid
-      // 将 markdown 包装成 html 后上传内容
-      const html = helper.embedMDNote(note.content || '', [], {
-        wrapWithPreTag: false,
-        kbGuid,
-        docGuid
-      })
-      await WizNoteApi.KnowledgeBaseApi.updateNote({
-        kbGuid,
-        docGuid,
-        data: {
-          html,
-          title: note.title || 'Untitled',
-          resources: [],
-          type: 'document'
-        }
-      })
-      return { guid: docGuid }
+      return { guid: result.guid }
     }
 
     throw new Error(result?.returnMessage || 'Failed to create note')
@@ -145,9 +159,10 @@ const api = {
       type: 'document'
     }
 
-    // 只有明确传入 category 时才包含（注意：传 category 会触发移动操作）
-    if (updates.category) {
-      data.category = updates.category
+    // 规范化分类：离线根目录 '/我的笔记/' 转为根目录 '/'；其余使用原值
+    const normCat = normalizeCategory(updates.category || '')
+    if (normCat && normCat !== '/') {
+      data.category = normCat
     }
 
     const result = await WizNoteApi.KnowledgeBaseApi.updateNote({

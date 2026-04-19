@@ -55,6 +55,7 @@ export default {
     RegisterApiHandler()
     bus.$on(events.RELOGIN, this.reLogin)
     bus.$on('showOfflineSyncPrompt', this.showOfflineSyncPrompt)
+    this.registerSyncListener()
     checkUpdate()
     this.initClientStore().then()
     this.initServerStore().then()
@@ -86,6 +87,17 @@ export default {
       if (this.$refs.offlineSyncDialog) {
         this.$refs.offlineSyncDialog.show(offlineNotes)
       }
+    },
+    // 注册同步完成监听器，刷新服务器笔记列表
+    async registerSyncListener () {
+      const SyncService = (await import('./services/SyncService')).default
+      this._syncListener = (event) => {
+        if (event.type === 'sync_complete') {
+          this.getAllCategories()
+          this.getCategoryNotes()
+        }
+      }
+      SyncService.addListener(this._syncListener)
     },
     // 确认同步离线笔记
     async handleOfflineSync () {
@@ -133,6 +145,11 @@ export default {
   },
   beforeDestroy () {
     bus.$off('showOfflineSyncPrompt', this.showOfflineSyncPrompt)
+    if (this._syncListener) {
+      import('./services/SyncService').then(({ default: SyncService }) => {
+        SyncService.removeListener(this._syncListener)
+      })
+    }
   }
 }
 </script>
