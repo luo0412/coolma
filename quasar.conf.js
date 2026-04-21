@@ -290,7 +290,7 @@ module.exports = function (/* ctx */) {
         // ─── 压缩 asar 包 ───
         // asarUnpack 用于将大体积模块解压到外部，asar 保持 true 即可
         asar: true,
-        asarUnpack: '**/node_modules/{monaco-editor,echarts,mermaid,vega*,markmap*,katex,@quasar/extras}/**/*',
+        // asarUnpack: '**/node_modules/{monaco-editor,echarts,mermaid,vega*,markmap*,katex,@quasar/extras}/**/*',
 
         // ─── 排除 node_modules 中的无用模块 ───
         files: [
