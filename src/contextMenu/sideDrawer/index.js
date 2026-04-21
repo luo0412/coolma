@@ -18,14 +18,37 @@ import { popContextMenu } from 'src/ApiInvoker'
  * @param {MouseEvent} event The native mouse event.
  * @param {boolean} isCurrentCategory
  * @param {string} category
+ * @param {boolean} isLogin Whether user is logged in
  */
-export const showContextMenu = (event, isCurrentCategory, category) => {
-  EXPORT.enabled = isCurrentCategory
-  if (helper.isNullOrEmpty(category)) {
-    EXPORT.enabled = false
-    DELETE.enabled = false
+export const showContextMenu = (event, isCurrentCategory, category, isLogin) => {
+  const isRootCategory = helper.isNullOrEmpty(category)
+
+  // 根目录禁用导出和删除
+  EXPORT.enabled = !isRootCategory
+  DELETE.enabled = !isRootCategory
+
+  const ITEMS = []
+
+  // 离线未登录时，隐藏创建文件夹、导入、导出选项
+  if (isLogin) {
+    ITEMS.push(CREATE_CATEGORY)
+    ITEMS.push(OPEN_IMPORT)
+    ITEMS.push(EXPORT)
   }
-  const ITEMS = [CREATE_CATEGORY, CREATE_NOTE, SEPARATOR, OPEN_TIER_RANKING, SEPARATOR, OPEN_IMPORT, EXPORT, SEPARATOR, DELETE]
+
+  ITEMS.push(CREATE_NOTE)
+  ITEMS.push(SEPARATOR)
+
+  // 只有登录用户才能使用标签排行榜
+  if (isLogin) {
+    ITEMS.push(OPEN_TIER_RANKING)
+    ITEMS.push(SEPARATOR)
+  }
+
+  // 非根目录才能删除
+  if (!isRootCategory) {
+    ITEMS.push(DELETE)
+  }
 
   const MENU_ITEM = ITEMS.map(item => {
     if (item.type === 'separator') return item

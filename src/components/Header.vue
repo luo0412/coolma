@@ -62,6 +62,7 @@
 
       <!-- 标签图标 -->
       <div
+        v-if="isLogin"
         class="header-icon-btn q-electron-drag--exception"
         :class="{ 'is-active': sidebarTreeType === 'tag' }"
         :title="$t('tag')"
@@ -72,6 +73,7 @@
 
       <!-- 日历 -->
       <div
+        v-if="isLogin"
         class="header-icon-btn q-electron-drag--exception"
         :class="{ 'is-active': sidebarTreeType === 'calendar' }"
         :title="$t('calendarView')"
@@ -82,6 +84,7 @@
 
       <!-- 搜索图标 -->
       <div
+        v-if="isLogin"
         class="header-icon-btn q-electron-drag--exception"
         :class="{ 'is-highlight': searchHighlight }"
         :title="$t('search')"
@@ -121,6 +124,7 @@
     <div class="header-right-icons">
       <!-- 全局同步按钮 -->
       <div
+        v-if="isLogin"
         class="header-icon-btn q-electron-drag--exception sync-btn"
         :class="{ 'is-syncing': isSyncing, 'has-pending': pendingCount > 0 }"
         :title="syncTooltip"

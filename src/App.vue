@@ -124,7 +124,7 @@ export default {
       }
     },
     ...mapClientActions(['initClientStore']),
-    ...mapServerActions(['initServerStore', 'reLogin', 'initOfflineMode']),
+    ...mapServerActions(['initServerStore', 'reLogin', 'initOfflineMode', 'getAllCategories', 'getCategoryNotes']),
     ...mapServerState(['isLogin']),
     ...mapOfflineActions(['initOfflineStore', 'sync'])
   },

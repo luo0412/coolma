@@ -302,13 +302,13 @@ export default {
       if (this.type !== 'category') return
       this.setRightClickCategoryItem(data.key)
       e.stopPropagation()
-      showSideDrawerContextMenu(e, this.currentCategory === data.key, data.key)
+      showSideDrawerContextMenu(e, this.currentCategory === data.key, data.key, this.isLogin)
     },
     drawerContextMenuHandler: function (e) {
       if (this.type !== 'category') return
       this.setRightClickCategoryItem('')
       e.stopPropagation()
-      showSideDrawerContextMenu(e, this.currentCategory === '', '')
+      showSideDrawerContextMenu(e, this.currentCategory === '', '', this.isLogin)
     },
     tagTreemapContextMenuHandler: function (e) {
       e.preventDefault()
